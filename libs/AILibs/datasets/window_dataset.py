@@ -2,6 +2,11 @@ import  numpy
 
 class WindowDataset:
 
+    """
+        A dataset wrapper that creates sliding windows over the input dataset.
+        This is useful for time series data where we want to create sequences of a fixed length.
+    """
+
     def __init__(self, dataset, window_size):
 
         x, y = dataset[0]
