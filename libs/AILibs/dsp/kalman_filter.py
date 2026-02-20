@@ -38,8 +38,8 @@ class KalmanFilter:
 
     '''
         filter output step
-        y_obs : observed system output
-        u     : system control input
+        y_obs : observed system output, shape (n_outputs, 1)
+        u     : system control input, shape (n_inputs, 1)
     '''
     def step(self, y_obs, u):
         # correction (filtered estimate at time n)
@@ -49,6 +49,19 @@ class KalmanFilter:
         self.x_hat = self.a @ x_filtered + self.b @ u
         
         return x_filtered
+    
+    '''
+        predict future system outputs based on current state and control input sequence
+        u_seq : sequence of system control inputs, shape (n_steps, n_inputs, 1)
+    ''' 
+    def predict(self, u_seq):
+        predictions = []
+        x_pred = self.x_hat
+        for u in u_seq:
+            x_pred = self.a @ x_pred + self.b @ u
+            y_pred = self.h @ x_pred
+            predictions.append(y_pred)
+        return numpy.array(predictions)
 
     # compute kalman gain matrix K 
     def _solve_kalman_gain(self, a, h, q, r):
