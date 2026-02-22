@@ -23,7 +23,12 @@ if __name__ == "__main__":
 
     x_train = dataset_orig.x[train_indices, :-1]
 
+    #x_mean = x_train.mean(axis=0)
+    #x_std  = x_train.std(axis=0) + 1e-10
+    #x_train = (x_train - x_mean) / x_std
+
     x_test  = dataset_orig.x[test_indices, :-1]
+    #x_test = (x_test - x_mean) / x_std
 
     # target indficator is in the last column, and is only for evaluation, not for training
     y_gt    = dataset_orig.x[test_indices, -1]
@@ -36,8 +41,8 @@ if __name__ == "__main__":
 
     print("Fitting Isolation Forest...")
 
-    forest = AILibs.forest.IsolationForest()
-    #forest = AILibs.forest.ExtendedIsolationForest()
+    #forest = AILibs.forest.IsolationForest()
+    forest = AILibs.forest.ExtendedIsolationForest()
     forest.fit(x_train, max_depth=12, num_trees=128, num_subsamples=4096)
 
     print("Predicting with Isolation Forest...")

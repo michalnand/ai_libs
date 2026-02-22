@@ -4,6 +4,14 @@ import os
 
 class ImagesLoader:
 
+    """
+        Runtime images loader. Loads images from a given directory and its subdirectories, 
+        resizes them to a specified size (if provided), 
+        normalizes pixel values to the range [0, 1], 
+        and returns them as numpy arrays in CHW format (channels, height, width). 
+        The loader supports common image formats such as JPG and PNG.
+    """
+
     def __init__(self, root_path, size = None):
         self.images_path = self._find_images(root_path)
         self.images_path.sort()
