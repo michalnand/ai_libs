@@ -353,7 +353,7 @@ class TestRandomForest:
 
     # ------------------------------------------------------------------
     # 7. Multi-output regression — y has several columns
-    #    The RandomDecissionTree stores y.mean(axis=0) at leaves, so
+    #    The RandomDecisionTree stores y.mean(axis=0) at leaves, so
     #    multi-output should work out of the box.
     # ------------------------------------------------------------------
     def test_multi_output(self, rng):

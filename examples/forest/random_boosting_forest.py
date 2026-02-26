@@ -36,14 +36,16 @@ if __name__ == "__main__":
     print("Fitting Random Boosting Forest...")   
 
     forest = AILibs.forest.RandomBoostingForest()   
-    #forest = AILibs.forest.ExtendedIsolationForest()
-    forest.fit(x_train, y_train, max_depth=12, num_trees=128, num_subsamples=4096)
+    #forest = AILibs.forest.ExtendedIsolationForest()   
+    #forest.fit(x_train, y_train, max_depth=10, num_trees=32, num_subsamples=4096, learning_rate=0.1)
+    forest.fit(x_train, y_train, max_depth=12, num_trees=64, num_subsamples=16384, learning_rate=0.1)
 
     print("Predicting with Random Boosting Forest...")  
     y_pred = forest.predict_batch(x_test)
 
-    #th = AILibs.metrics.tune_threshold(y_test, scores, metric="f1")
-    metrics = AILibs.metrics.detection_evaluation(y_test, y_pred, th=0.5)
+    th = AILibs.metrics.tune_threshold(y_test, y_pred, metric="f1")
+    print("Tuned threshold = ", th)
+    metrics = AILibs.metrics.detection_evaluation(y_test, y_pred, th=th)
 
     print("\n\n")
     print(AILibs.metrics.format_metrics(metrics))
