@@ -80,6 +80,62 @@ def lr_sparse_fit(X, Y, density=0.01, n_iter=100, rel_tol=1e-6):
     return A_result
 
 
+def lr_lasso_fit(X, Y, lambda_=1.0, n_iter=10000, rel_tol=1e-6):
+    """
+        linear regression with L1 regularization (Lasso),
+        for data X, Y, fits a linear regression model Y = XA with a sparse A
+
+        uses coordinate descent with soft-thresholding (pure numpy, no sklearn)
+
+        :param X: numpy array, shape (n_samples, n_inputs)
+        :param Y: numpy array, shape (n_samples, n_ouputs)
+        :param lambda_: float, regularization parameter controlling sparsity
+        :param n_iter: int, maximum number of coordinate descent iterations
+        :param rel_tol: float, relative improvement threshold for early stopping
+    """
+
+    n_samples, n_inputs = X.shape
+    _, n_outputs        = Y.shape
+
+    A_result = numpy.zeros((n_inputs, n_outputs))
+
+    # precompute column norms (squared) for normalisation
+    col_norms_sq = (X ** 2).sum(axis=0)                # shape (n_inputs,)
+
+    for col in range(n_outputs):
+        y = Y[:, col]
+        w = numpy.zeros(n_inputs)
+        residual = y.copy()
+
+        for iteration in range(n_iter):
+            w_old = w.copy()
+
+            for j in range(n_inputs):
+                # temporarily add back j-th feature contribution
+                residual += X[:, j] * w[j]
+
+                # compute un-regularised optimum for j-th coordinate
+                rho_j = X[:, j] @ residual
+
+                # soft-thresholding
+                if col_norms_sq[j] == 0.0:
+                    w[j] = 0.0
+                else:
+                    w[j] = numpy.sign(rho_j) * max(abs(rho_j) - lambda_ * n_samples, 0.0) / col_norms_sq[j]
+
+                # update residual with new weight
+                residual -= X[:, j] * w[j]
+
+            # convergence check
+            dw = numpy.linalg.norm(w - w_old)
+            if dw < rel_tol * (numpy.linalg.norm(w) + 1e-30):
+                break
+
+        A_result[:, col] = w
+
+    return A_result
+
+
 # Sparse Relaxed Regularized Regression — SR3
 def sr3_fit(X, Y, lambda_=1.0, rho=1.0, n_iter=100, rel_tol=1e-6):
     """
