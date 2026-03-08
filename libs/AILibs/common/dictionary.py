@@ -65,3 +65,14 @@ def dictionary_sin_cos_cross(x):
 
     return numpy.concatenate(terms, axis=1)
 
+
+
+def dictionary_stacked(x, dictionaries):
+    """
+    returns features from multiple dictionaries stacked together
+    """
+    features = []
+    features.append(x)  # include original features
+    for d in dictionaries:
+        features.append(d(x))
+    return numpy.concatenate(features, axis=1)
