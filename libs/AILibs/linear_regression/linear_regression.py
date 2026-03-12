@@ -137,7 +137,7 @@ def lr_lasso_fit(X, Y, lambda_=1.0, n_iter=10000, rel_tol=1e-6):
 
 
 # Sparse Relaxed Regularized Regression — SR3
-def sr3_fit(X, Y, lambda_=1.0, rho=1.0, n_iter=100, rel_tol=1e-6):
+def sr3_fit(X, Y, lambda_=0.01, rho=1.0, n_iter=100, rel_tol=1e-6):
     """
         sparse linear regression using SR3 algorithm,
         for data X, Y, fits a linear regression model Y = XA with a sparse A
