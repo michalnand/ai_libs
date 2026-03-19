@@ -1,7 +1,7 @@
 import numpy
 import scipy
 
-
+    
 '''
 solve LQR controller for discrete discrete system
 x(n+1) = Ax(n) + Bu(n)

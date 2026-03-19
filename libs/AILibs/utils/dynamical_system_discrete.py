@@ -37,7 +37,8 @@ class DynamicalSystemDiscrete:
         else:
             self.x = numpy.zeros((self.a.shape[0], 1))
 
-    
+        return self.x
+        
     #state-less forward func
     def forward(self, x, u):
         x_new = self.a@x + self.b@u
