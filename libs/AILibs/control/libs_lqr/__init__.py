@@ -1,3 +1,6 @@
-from .lqr_discrete  import *    
-from .lqri_discrete import *
-from .lqg_discrete  import * 
+from .lqr_discrete     import *    
+from .lqri_discrete    import *    
+from .lqri_du_discrete import * 
+
+
+

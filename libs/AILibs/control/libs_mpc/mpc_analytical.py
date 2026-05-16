@@ -9,7 +9,7 @@ class MPCAnalytical:
     prediction_horizon  : Hp (how many future states)
     control_horizon     : Hc (how many future inputs we optimize; typically <= Hp)
     """
-    def __init__(self, A, B, Q, R, prediction_horizon=16, control_horizon=4, u_max=1e10):
+    def __init__(self, A, B, Q, R, prediction_horizon=16, control_horizon=4, u_max=1e10, du_max=1e10):
 
         self.A      = A
         self.B      = B
@@ -18,9 +18,10 @@ class MPCAnalytical:
         self.Hp     = prediction_horizon
         self.Hc     = control_horizon
         self.u_max  = u_max
+        self.du_max = du_max  # max change in input (for rate limits)
 
         # 1, build Phi and Theta
-        self.Phi, self.Theta = self._build_prediction_matrices(A, B, self.Hp, self.Hc)
+        self.Phi, self.Omega, self.Theta = self._build_prediction_matrices(A, B, self.Hp, self.Hc)
 
         # 2, build augmented tilde Q and tilde R, block-diagonal
         self.Q_aug = numpy.kron(numpy.eye(self.Hp), Q)
@@ -50,6 +51,16 @@ class MPCAnalytical:
         for i in range(Hp):
             Phi[i * nx:(i + 1) * nx, :] = A_pows[i + 1]  # A^(i+1)
 
+
+        # Construct result_omega matrix
+        Omega = numpy.zeros((nx * Hp, nu))        
+        for n in range(Hp):
+            tmp = numpy.zeros_like(B)
+            for i in range(n + 1):  # Cumulative effect up to n+1
+                tmp += A_pows[i] @ B
+            ofs = n * nx    
+            Omega[ofs:ofs + nx, :] = tmp
+
         # Theta: (nx*Hp, nu*Hc) where block (i,j) is A^(i-j) B for i>=j, else 0
         Theta = numpy.zeros((nx * Hp, nu * Hc))
         for i in range(Hp):
@@ -61,14 +72,36 @@ class MPCAnalytical:
                     # remains zero
                     pass
 
-        return Phi, Theta
+        return Phi, Omega, Theta
 
-    def forward_traj(self, Xr, x):
+    '''
+    def forward_traj(self, Xr, x, u_prev):
         # residual
-        e = Xr - self.Phi @ x
+        e = Xr - self.Phi @ x - self.Omega@u_prev
 
-        # compute only first control
-        u0 = self.Sigma0 @ e
-        u0 = numpy.clip(u0, -self.u_max, self.u_max)
+        du = self.Sigma0@e
 
-        return u0
+        du = numpy.clip(du, -self.du_max, self.du_max)
+        u  = numpy.clip(u_prev + du, -self.u_max, self.u_max)
+
+        return u    
+    '''
+
+    def forward_traj(self, Xr, x, u_prev):
+        # residual
+        e = Xr - self.Phi @ x   
+
+        u = self.Sigma0@e
+
+        u  = numpy.clip(u, -self.u_max, self.u_max)
+
+        return u     
+    
+
+    def forward(self, xr, x, u_prev):
+
+        Xr = []
+        for n in range(self.Hp):
+            Xr.append(xr)
+        Xr = numpy.concatenate(Xr)
+        return self.forward_traj(Xr, x, u_prev)
