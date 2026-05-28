@@ -12,11 +12,13 @@ class ImagesLoader:
         The loader supports common image formats such as JPG and PNG.
     """
 
-    def __init__(self, root_path, size = None, name_filter = None):
+    def __init__(self, root_path, size = None, name_filter = None, keep_uint8 = False):
         self.images_path = self._find_images(root_path, name_filter)
         self.images_path.sort()
 
         self.size = size
+
+        self.keep_uint8 = keep_uint8
 
         print("images list")
         for p in self.images_path:
@@ -35,6 +37,10 @@ class ImagesLoader:
                 if name_filter is not None:
                     if name_filter not in str(filename):
                         continue
+                
+                tmp = os.path.basename(filename)
+                if tmp.startswith("."):
+                    continue
 
                 _, ext = os.path.splitext(filename)
                 if ext in image_extensions:
@@ -56,9 +62,14 @@ class ImagesLoader:
         img = cv2.imread(file_name)
 
         if self.size is not None:
-            img = cv2.resize(img, self.size, interpolation= cv2.INTER_LINEAR)
+            img = cv2.resize(img, self.size, interpolation= cv2.INTER_NEAREST)
         
-        img = numpy.array(img/255.0, dtype=numpy.float32)
+        if self.keep_uint8:
+            img = numpy.array(img, dtype=numpy.uint8)
+        else:
+            img = numpy.array(img/255.0, dtype=numpy.float32)
+
+
         img = numpy.transpose(img, (2, 0, 1))
 
         return numpy.array(img)
