@@ -42,7 +42,7 @@ def detection_evaluation(y_gt, y_pred, th=0.5):
     FN = numpy.sum((y_gt == 1) & (y_pred == 0))
 
     # ---- basic metrics ----
-    accuracy  = (TP + TN) / (TP + TN + FP + FN)
+    accuracy  = (TP + TN) / (TP + TN + FP + FN + 1e-10)
     precision = TP / (TP + FP) if (TP + FP) > 0 else 0.0
     recall    = TP / (TP + FN) if (TP + FN) > 0 else 0.0       # sensitivity / TPR
     f1        = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0

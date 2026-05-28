@@ -44,8 +44,7 @@ class UnetModel(torch.nn.Module):
         self.dec1 = ConvBlock(16, 8, 3)
 
         # Final output
-        self.out_a = torch.nn.Conv2d(8, out_ch, kernel_size=1)
-        self.out_b = torch.nn.Conv2d(8, out_ch, kernel_size=1)
+        self.out = torch.nn.Conv2d(8, out_ch, kernel_size=1)
 
     def forward(self, x):
         # Encoder
@@ -72,7 +71,7 @@ class UnetModel(torch.nn.Module):
         d1 = self.up1(d2)
         d1 = self.dec1(torch.cat([d1, e1], dim=1))
 
-        return self.out_a(d1), self.out_b(d1)
+        return self.out(d1)
     
 
 if __name__ == "__main__":

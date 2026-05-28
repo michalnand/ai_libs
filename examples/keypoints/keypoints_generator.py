@@ -2,20 +2,19 @@ import numpy
 import cv2
 
 class KeypointsGenerator:
-    def __init__(self):
-        pass
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
 
     def get(self):
 
         # this will be randomised
-        n_points    = 16
-        radius      = 0.4
-        noise       = 0.2
-        hole_scale  = 0.3
+        n_points    = numpy.random.randint(3, 8)
+        radius      = numpy.random.uniform(0.3, 0.7)
+        noise       = 0.4
+        hole_scale  = radius*numpy.random.uniform(0.1, 0.9)
 
-        width = 512
-        height = 512
-        
+
         outer_points = self._random_polygon(n_points=n_points, radius=radius, noise=noise)
 
         if numpy.random.rand() < 0.5:
@@ -23,15 +22,15 @@ class KeypointsGenerator:
         else:
             holes = None
 
-        mask = self._polygon_to_mask(outer_points, width=width, height=height, hole_points=holes)
+        mask = self._polygon_to_mask(outer_points, width=self.width, height=self.height, hole_points=holes)
 
         points = outer_points.copy()
         if holes is not None:
             points += holes
 
-        keypoints = self._keypoints_to_map(points, width=width, height=height)
+        keypoints = self._keypoints_to_map(points, width=self.width, height=self.height)
 
-        _keypoints_to_heatmap_blur = self._keypoints_to_heatmap_blur(points, width=width, height=height, sigma=5)
+        _keypoints_to_heatmap_blur = self._keypoints_to_heatmap_blur(points, width=self.width, height=self.height, sigma=3)
 
         return mask, keypoints, _keypoints_to_heatmap_blur
     
@@ -120,50 +119,59 @@ class KeypointsGenerator:
             heatmap /= heatmap.max()
 
         return heatmap
-    
-
-    def _keypoints_to_heatmap_blur(self, points, width, height, sigma=3):
+        
+    def _keypoints_to_heatmap_blur(self, points, width, height, sigma=2):
         heatmap = numpy.zeros((height, width), dtype=numpy.float32)
 
-        pts = numpy.array(points) * [width, height]
-        pts = pts.astype(numpy.int32)
+        # Assuming points are normalized (0.0 to 1.0) and in (x, y) format
+        pts = numpy.array(points) * [width - 1, height - 1]
+        pts = numpy.round(pts).astype(numpy.int32)
 
-        ksize = int(6 * sigma + 1)
+        ksize = int(5 * sigma + 1)
         if ksize % 2 == 0:
             ksize += 1
+        radius = ksize // 2
 
-        # precompute gaussian kernel
-        ax = numpy.arange(ksize) - ksize // 2
+        # Precompute Gaussian kernel (peak value is 1.0 at the center)
+        ax = numpy.arange(ksize) - radius
         xx, yy = numpy.meshgrid(ax, ax)
         gaussian = numpy.exp(-(xx**2 + yy**2) / (2 * sigma**2))
 
         for x, y in pts:
-            x1 = max(0, x - ksize // 2)
-            y1 = max(0, y - ksize // 2)
-            x2 = min(width, x + ksize // 2 + 1)
-            y2 = min(height, y + ksize // 2 + 1)
+            # Ignore points that fall completely outside the heatmap boundaries
+            if not (0 <= x < width and 0 <= y < height):
+                continue
 
-            g_x1 = max(0, ksize // 2 - x)
-            g_y1 = max(0, ksize // 2 - y)
+            # Map out boundaries on the heatmap
+            x1 = max(0, x - radius)
+            y1 = max(0, y - radius)
+            x2 = min(width, x + radius + 1)
+            y2 = min(height, y + radius + 1)
+
+            # Map out corresponding boundaries on the precomputed gaussian kernel
+            # Fix: Ensure g_x corresponds to x changes, and g_y to y changes
+            g_x1 = max(0, radius - x)
+            g_y1 = max(0, radius - y)
             g_x2 = g_x1 + (x2 - x1)
             g_y2 = g_y1 + (y2 - y1)
 
+            # Element-wise maximum handles overlapping/close keypoints cleanly
             heatmap[y1:y2, x1:x2] = numpy.maximum(
                 heatmap[y1:y2, x1:x2],
                 gaussian[g_y1:g_y2, g_x1:g_x2]
             )
 
         return heatmap
-    
+        
 
 if __name__ == "__main__":
-    generator = KeypointsGenerator()
+    generator = KeypointsGenerator(512, 512)
     mask, keypoints, heatmap = generator.get()
 
     result_img = numpy.zeros((mask.shape[0], mask.shape[1], 3), dtype=numpy.float32)
     result_img[mask == 1] = [0.1, 0.1, 0.1]
-    #result_img[keypoints == 1] = [0, 1.0, 0]
-    result_img[heatmap == 1] = [1.0, 1.0, 1.0]
+    result_img[keypoints == 1] = [0.0, 1.0, 0.0]
+    #result_img[heatmap == 1] = [1.0, 0.0, 0.0]
 
     cv2.imshow('Result', result_img)
     cv2.waitKey(0)

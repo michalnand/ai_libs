@@ -12,8 +12,8 @@ class ImagesLoader:
         The loader supports common image formats such as JPG and PNG.
     """
 
-    def __init__(self, root_path, size = None):
-        self.images_path = self._find_images(root_path)
+    def __init__(self, root_path, size = None, name_filter = None):
+        self.images_path = self._find_images(root_path, name_filter)
         self.images_path.sort()
 
         self.size = size
@@ -25,12 +25,17 @@ class ImagesLoader:
         print("images count ", len(self.images_path))
         print()
 
-    def _find_images(self, root_path):
+    def _find_images(self, root_path, name_filter):
         image_extensions = {'.jpg', '.JPG', '.png', '.PNG'}
         image_paths = []
 
         for dirpath, dirnames, filenames in os.walk(root_path):
             for filename in filenames:
+                
+                if name_filter is not None:
+                    if name_filter not in str(filename):
+                        continue
+
                 _, ext = os.path.splitext(filename)
                 if ext in image_extensions:
                     full_path = os.path.join(dirpath, filename)

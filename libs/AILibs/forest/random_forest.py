@@ -145,7 +145,7 @@ class RandomBoostingForest:
                 x_sampled = x
                 r_sampled = residual
 
-            tree = RandomDecisionTree(num)
+            tree = RandomDecisionTree()
             tree.fit(x_sampled, r_sampled, max_depth)
             self.trees.append(tree) 
 
