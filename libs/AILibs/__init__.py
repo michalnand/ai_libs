@@ -16,3 +16,5 @@ from .control              import *
 #from .test_data             import *
 
 from .features              import *
+
+from .pipelines             import *
