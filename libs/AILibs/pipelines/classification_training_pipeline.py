@@ -66,12 +66,13 @@ class ClassificationTrainingPipeline:
 
                 x_t = torch.from_numpy(x).float()
 
-                y_t = torch.from_numpy(y).float()
-
                 x_batch.append(x_t) 
-                y_batch.append(y_t)
+                y_batch.append(y)
 
             x_batch = torch.stack(x_batch).to(self.config.device)
+
+            y_batch = numpy.array(y_batch, dtype=int)
+            y_batch = torch.from_numpy(y_batch) 
             y_batch = torch.stack(y_batch).long().to(self.config.device)
 
             time_stop = time.time()
