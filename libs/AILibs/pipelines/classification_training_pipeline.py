@@ -60,7 +60,9 @@ class ClassificationTrainingPipeline:
 
 
                 x, y = self.config.training_dataset[idx]
-                x, y = self.config.augmentations(x, y)
+
+                if hasattr(self.config, "augmentations"):
+                    x, y = self.config.augmentations(x, y)
 
                 x_t = torch.from_numpy(x).float()
 
@@ -87,6 +89,8 @@ class ClassificationTrainingPipeline:
 
             if y_batch.shape[0] != y_pred.shape[0]:
                 raise Exception("y_batch and y_pred shape is not matching, expected " + str(y_batch.shape) + " , got " + str(y_pred.shape))
+
+
 
             loss = loss_func(y_pred, y_batch)
             optimizer.zero_grad()
