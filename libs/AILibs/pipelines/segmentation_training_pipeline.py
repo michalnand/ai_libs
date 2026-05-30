@@ -132,13 +132,17 @@ class SegmentationTrainingPipeline:
             result_log["timing"]    = timing_stats
             result_log["metric"]    = metric
 
-
-            log_str = str(json.dumps(result_log) + "\n")
-            f = open(results_path + "/training.log", "a+")
-            f.write(log_str)
-            f.close()   
-            
-            print(log_str)
+            tmp = self.config.num_steps//10000
+            if tmp < 1:
+                tmp = 1
+                
+            if (n%tmp) == 0:
+                log_str = str(json.dumps(result_log) + "\n")
+                f = open(results_path + "/training.log", "a+")
+                f.write(log_str)
+                f.close()   
+                
+                print(log_str)
 
             if n%saving_interval == 0:
                 file_name = results_path + "/model_" + str(saving_version) + ".pt"
