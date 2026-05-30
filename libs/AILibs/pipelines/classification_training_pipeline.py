@@ -72,8 +72,7 @@ class ClassificationTrainingPipeline:
             x_batch = torch.stack(x_batch).to(self.config.device)
 
             y_batch = numpy.array(y_batch, dtype=int)
-            y_batch = torch.from_numpy(y_batch) 
-            y_batch = torch.stack(y_batch).long().to(self.config.device)
+            y_batch = torch.from_numpy(y_batch).long().to(self.config.device)
 
             time_stop = time.time()
 
