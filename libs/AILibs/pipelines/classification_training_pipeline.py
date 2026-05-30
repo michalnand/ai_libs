@@ -62,11 +62,11 @@ class ClassificationTrainingPipeline:
                 x, y = self.config.training_dataset[idx]
 
                 if hasattr(self.config, "augmentations"):
-                    x, y = self.config.augmentations(x, y)
+                    x, _ = self.config.augmentations(x, y)
 
                 x_t = torch.from_numpy(x).float()
 
-                x_batch.append(x_t) 
+                x_batch.append(x_t)     
                 y_batch.append(y)
 
             x_batch = torch.stack(x_batch).to(self.config.device)
