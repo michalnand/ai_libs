@@ -56,8 +56,7 @@ class ClassificationTrainingPipeline:
                 if hasattr(self.config, "class_balancer"):
                     idx = self.config.class_balancer.sample()
                 else:
-                    idx = numpy.random.randint(0, len(self.training_dataset))
-
+                    idx = numpy.random.randint(0, len(self.config.training_dataset))
 
                 x, y = self.config.training_dataset[idx]
 
@@ -93,6 +92,7 @@ class ClassificationTrainingPipeline:
 
 
             loss = loss_func(y_pred, y_batch)
+
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()

@@ -13,6 +13,11 @@ class DatasetBalancer:
             _, class_label = dataset[n]
             self.class_indices[class_label]["indices"].append(n)
 
+        for n in range(len(self.class_indices)):
+            class_id = self.class_indices[n]["class_id"]
+            count    = len(self.class_indices[n]["indices"])
+            print("class ", class_id,  " count :", count)
+
 
     def sample(self):
         # uniform sample random class
