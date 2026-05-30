@@ -62,6 +62,7 @@ def classification_evaluation(y_gt, y_pred, num_classes):
     iou_per_class = numpy.zeros(num_classes)
     dice_per_class = numpy.zeros(num_classes)
 
+
     for c in range(num_classes):
         tp, fp, fn, tn = tp_per_class[c], fp_per_class[c], fn_per_class[c], tn_per_class[c]
 
@@ -80,6 +81,12 @@ def classification_evaluation(y_gt, y_pred, num_classes):
         iou_per_class[c] = tp / (tp + fp + fn) if (tp + fp + fn) > 0 else 0.0
         dice_per_class[c] = 2 * tp / (2 * tp + fp + fn) if (2 * tp + fp + fn) > 0 else 0.0
 
+
+    # ---- Par class counts ---
+    class_counts = numpy.zeros(num_classes, dtype=int)
+    for c in range(num_classes):
+        class_counts[c] = numpy.sum(y_gt == c)
+    
     # ---- Macro-Averaging ----
     macro_precision = numpy.mean(precision_per_class)
     macro_recall = numpy.mean(recall_per_class)
@@ -106,6 +113,7 @@ def classification_evaluation(y_gt, y_pred, num_classes):
         "tn_per_class"      : tn_per_class.tolist(),
         "fp_per_class"      : fp_per_class.tolist(),
         "fn_per_class"      : fn_per_class.tolist(),
+        "class_counts"      : class_counts.tolist(),    
         # New meaningful per-class metrics
         "precision_per_class": [round(float(x), 5) for x in precision_per_class],
         "recall_per_class"   : [round(float(x), 5) for x in recall_per_class],

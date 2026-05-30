@@ -1,4 +1,5 @@
 from .dataset_collator  import *
+from .dataset_balancer  import *
 from .csv_dataset       import *
 from .images_loader     import *
 
