@@ -66,7 +66,7 @@ class ImagesLoader:
     def _load_image(self, file_name):
         img = cv2.imread(file_name)
 
-        h, w = img.shape[:2]   
+        h, w = img.shape[:2]    
 
         if img is None or h < 32 or w < 32:
             raise Exception("Image size too small, got " + str(h) + "x" + str(w) + " file " + str(file_name))
@@ -81,6 +81,10 @@ class ImagesLoader:
 
 
         img = numpy.transpose(img, (2, 0, 1))
+
+        print(file_name)
+        print(img.shape)
+        print("\n\n")
 
         return numpy.array(img)
     
