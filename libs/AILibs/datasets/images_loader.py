@@ -47,6 +47,7 @@ class ImagesLoader:
                 _, ext = os.path.splitext(filename)
                 if ext in image_extensions:
                     full_path = os.path.join(dirpath, filename)
+                    print("testign ", full_path)
                     if self._is_valid(full_path):
                         image_paths.append(full_path)
                     else:
@@ -82,6 +83,16 @@ class ImagesLoader:
 
     def _is_valid(self, file_name):
         try:
+            # File must exist and be at least 4 KB
+            if not os.path.isfile(file_name):
+                return False
+
+            if os.path.getsize(file_name) < 4096:
+                return False
+            
+            return True
+
+            '''
             img = cv2.imread(file_name, cv2.IMREAD_UNCHANGED)
 
             if img is None:
@@ -93,6 +104,7 @@ class ImagesLoader:
             h, w = img.shape[:2]
 
             return h > 32 and w > 32
+            '''
 
         except Exception:
             return False
