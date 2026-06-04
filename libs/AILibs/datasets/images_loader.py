@@ -47,8 +47,7 @@ class ImagesLoader:
                 _, ext = os.path.splitext(filename)
                 if ext in image_extensions:
                     full_path = os.path.join(dirpath, filename)
-                    print("testign ", full_path)
-                    if self._is_valid(full_path):
+                    if self._is_valid(full_path):   
                         image_paths.append(full_path)
                     else:
                         print("ERROR for image ", full_path)
@@ -66,6 +65,11 @@ class ImagesLoader:
 
     def _load_image(self, file_name):
         img = cv2.imread(file_name)
+
+        h, w = img.shape[:2]    
+
+        if h < 32 or w < 32:
+            raise Exception("Image size too small, got " + str(h) + "x" + str(w) + " file " + str(file_name))
 
         if self.size is not None:
             img = cv2.resize(img, self.size, interpolation= cv2.INTER_NEAREST)
