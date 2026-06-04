@@ -20,12 +20,12 @@ class ImagesLoader:
 
         self.keep_uint8 = keep_uint8
 
-        '''
+        
         print("images list")
         for p in self.images_path:
             print(p)
         print()
-        '''
+        
         print("images count ", len(self.images_path))
         
 
@@ -49,7 +49,7 @@ class ImagesLoader:
                     full_path = os.path.join(dirpath, filename)
                     if self._is_valid(full_path):   
                         image_paths.append(full_path)
-                    else:
+                    else:   
                         print("ERROR for image ", full_path)
 
         return image_paths
@@ -80,11 +80,7 @@ class ImagesLoader:
             img = numpy.array(img/255.0, dtype=numpy.float32)
 
 
-        img = numpy.transpose(img, (2, 0, 1))
-
-        print(file_name)
-        print(img.shape)
-        print("\n\n")
+        img = numpy.transpose(img, (2, 0, 1))   
 
         return numpy.array(img)
     
