@@ -20,12 +20,14 @@ class ImagesLoader:
 
         self.keep_uint8 = keep_uint8
 
+        '''
         print("images list")
         for p in self.images_path:
             print(p)
         print()
+        '''
         print("images count ", len(self.images_path))
-        print()
+        
 
     def _find_images(self, root_path, name_filter):
         image_extensions = {'.jpg', '.JPG', '.png', '.PNG'}
@@ -45,7 +47,10 @@ class ImagesLoader:
                 _, ext = os.path.splitext(filename)
                 if ext in image_extensions:
                     full_path = os.path.join(dirpath, filename)
-                    image_paths.append(full_path)
+                    if self._is_valid(full_path):
+                        image_paths.append(full_path)
+                    else:
+                        print("ERROR for image ", full_path)
 
         return image_paths
 
@@ -73,3 +78,21 @@ class ImagesLoader:
         img = numpy.transpose(img, (2, 0, 1))
 
         return numpy.array(img)
+    
+
+    def _is_valid(self, file_name):
+        try:
+            img = cv2.imread(file_name, cv2.IMREAD_UNCHANGED)
+
+            if img is None:
+                return False
+
+            if len(img.shape) < 2:
+                return False
+
+            h, w = img.shape[:2]
+
+            return h > 32 and w > 32
+
+        except Exception:
+            return False
