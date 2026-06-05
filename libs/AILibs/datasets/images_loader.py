@@ -47,11 +47,9 @@ class ImagesLoader:
                 _, ext = os.path.splitext(filename)
                 if ext in image_extensions:
                     full_path = os.path.join(dirpath, filename)
-                    if self._is_valid(full_path):   
-                        image_paths.append(full_path)
-                    else:   
-                        print("ERROR for image ", full_path)
-
+                    
+                    image_paths.append(full_path)
+                    
         return image_paths
 
 
@@ -94,7 +92,7 @@ class ImagesLoader:
             if os.path.getsize(file_name) < 4096:
                 return False
             
-            return True
+            return True 
 
             '''
             img = cv2.imread(file_name, cv2.IMREAD_UNCHANGED)
