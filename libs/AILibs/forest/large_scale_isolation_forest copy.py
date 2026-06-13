@@ -1,7 +1,7 @@
 import numpy
 
 
-class IsolationForest:
+class LargeScaleIsolationForest:
     """
     Isolation Forest for anomaly detection.
 
@@ -15,7 +15,18 @@ class IsolationForest:
         "Isolation forest." ICDM, 2008.
     """
 
-    def fit(self, x, max_depth, num_trees = 32, num_subsamples = -1, eps = 0.001):
+    def __init__(self, batch_size = 10000, num_trees = 128, min_leaf_size = 1, feature_subsample_ratio = 1.0, projection_dim = -1):
+        
+        self.batch_size                 = batch_size
+        self.num_trees                  = num_trees
+        self.min_leaf_size              = min_leaf_size
+        self.feature_subsample_ratio    = feature_subsample_ratio
+        self.projection_dim             = projection_dim
+        self.max_depth                  = max(int(numpy.log2(batch_size)), 1)
+
+
+
+    def fit(self, x_sampler):
         """
         Build an ensemble of isolation trees from training data.
 
@@ -33,22 +44,44 @@ class IsolationForest:
         """
         self.forest = []
 
-        # Store training set size for score normalisation in predict()
-        self.n_train_samples = x.shape[0]
-
         # Build each isolation tree independently
-        for n in range(num_trees):
-            # Optionally subsample the data for diversity and efficiency
-            if num_subsamples > 0:
-                idx = numpy.random.choice(x.shape[0], num_subsamples, replace=False)
-                x_sampled = x[idx]
+        for n in range(self.num_trees):
+            # subsample batch
+            x_batch = self._sample_random_batch(x_sampler, self.batch_size)
+
+            # select only random features subset
+            mask = numpy.random.rand(x_batch.shape[-1]) <= self.feature_subsample_ratio
+            while numpy.sum(mask) == 0:
+                mask = numpy.random.rand(x_batch.shape[-1]) <= self.feature_subsample_ratio
+
+            features_indices = numpy.where(mask)[0] 
+            
+            x_selected = x_batch[:, features_indices]
+
+            # standardise
+            x_mean = x_selected.mean(axis=0)
+            x_std  = x_selected.std(axis=0) + 1e-12
+
+            x_norm = (x_selected - numpy.expand_dims(x_mean, 0))/numpy.expand_dims(x_std, 0)
+
+            # random projection matrix
+            if self.projection_dim > 0:
+                projection_matrix = numpy.random.randn(x_norm.shape[1], self.projection_dim)
+                x_proj = x_norm@projection_matrix
             else:
-                x_sampled = x             
+                projection_matrix = None
+                x_proj = x_norm
 
-            tree = self._tree_recursion(x_sampled, 0, max_depth, eps)
-            self.forest.append(tree)
+            # tree saving
+            result_tree = {}
 
-        self.batch_size = num_subsamples
+            result_tree["features_indices"]     = features_indices
+            result_tree["mean"]                 = x_mean
+            result_tree["x_std"]                = x_std
+            result_tree["projection_matrix"]    = projection_matrix
+            result_tree["tree"]                 = self._tree_recursion(x_proj, 0, 1e-6)  
+
+            self.forest.append(result_tree)
 
         return self.forest
 
@@ -62,9 +95,24 @@ class IsolationForest:
             Anomaly score scalar, range [0, 1]
         """        
         path_length = 0
+
         
-        for tree in self.forest:
-            path_length+= self._eval_path_length(x, tree, 0)  
+        for item in self.forest:
+            # only selected features
+            x_selected = x[item["features_indices"]]
+            
+            # normalise
+            x_norm = (x_selected - item["mean"])/item["x_std"]
+
+            # random projection, if any
+            if item["projection_matrix"] is not None:
+                x_proj = numpy.expand_dims(x_norm, 0)@item["projection_matrix"]
+                x_proj = x_proj[0]
+            else:
+                x_proj = x_norm
+
+            tree = item["tree"]
+            path_length+= self._eval_path_length(x_proj, tree, 0)  
         
         # Average path length across all trees for each sample
         avg_path_lengths = path_length/len(self.forest)
@@ -77,6 +125,21 @@ class IsolationForest:
         return score_result
 
 
+
+    def _sample_random_batch(self, x_sampler, batch_size):
+
+        indices = numpy.random.randint(0, len(x_sampler), (batch_size, ))
+
+        if isinstance(x_sampler, numpy.ndarray):
+            result = x_sampler[indices]
+        elif isinstance(x_sampler, list):
+            result = x_sampler[indices]
+        #elif isinstance(x_sampler, BatchSampler):
+        #    result = x_sampler.sample(batch_size)
+        else:
+            raise Exception("Unsupported input data type")
+        
+        return numpy.array(result)
 
     def _eval_path_length(self, x_sample, tree, current_depth):
         """
@@ -101,7 +164,7 @@ class IsolationForest:
         
         # External node (leaf with size info) — no children to recurse into
         if "feature_idx" not in tree:
-            return current_depth #+ self._compute_c(tree.get("size", 1))
+            return current_depth
 
         
         feature_idx = tree["feature_idx"]
@@ -113,7 +176,8 @@ class IsolationForest:
         else:
             return self._eval_path_length(x_sample, tree["right"], current_depth + 1)
         
-    def _tree_recursion(self, x, current_depth, max_depth, eps=0.001):
+
+    def _tree_recursion(self, x, current_depth, eps=0.001):
         """
         Recursively build a single isolation tree.
 
@@ -139,7 +203,7 @@ class IsolationForest:
         n_samples, n_features = x.shape
 
         # Stopping criteria: max depth reached or node is pure (single sample)
-        if current_depth >= max_depth or n_samples <= 1:
+        if current_depth >= self.max_depth or n_samples <= self.min_leaf_size:
             return {}
         
         # Randomly select a feature dimension for splitting
@@ -166,12 +230,12 @@ class IsolationForest:
 
         # Recurse into non-empty children
         if left_idx.size > 0:
-            left_child = self._tree_recursion(left_x, current_depth + 1, max_depth, eps)
+            left_child = self._tree_recursion(left_x, current_depth + 1, eps)
         else:
             left_child = {"size": 0}
 
         if right_idx.size > 0:
-            right_child = self._tree_recursion(right_x, current_depth + 1, max_depth, eps) 
+            right_child = self._tree_recursion(right_x, current_depth + 1, eps) 
         else:
             right_child = {"size": 0}
         
