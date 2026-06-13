@@ -1,6 +1,8 @@
 import numpy
 import json
 
+import AILibs
+
 class LargeScaleIsolationForest:
     """
     Isolation Forest for anomaly detection.
@@ -25,20 +27,15 @@ class LargeScaleIsolationForest:
         self.max_depth                  = max(int(numpy.log2(batch_size)), 1)
 
 
-
+    
     def fit(self, x_sampler):
         """
         Build an ensemble of isolation trees from training data.
 
         Args:
-            x:              Training data of shape (n_samples, n_features).
-            max_depth:      Maximum depth for each isolation tree.
-            num_trees:      Number of isolation trees in the forest.
-            num_subsamples: If > 0, each tree is built on a random subsample
-                            of this size (recommended for large datasets).
-            eps:            Minimum range threshold for a feature; if the
-                            feature's range is <= eps the node becomes a leaf.
-
+            x: Training dataset,
+                - for small in-memory dataset use : list of vectors, or numpy matrix, (num_samples, num_features)
+                - for large dataset (not fitting into memory, use class AILibs.BatchSampler, returning random batches)
         Returns:
             List of isolation tree root nodes (dicts).
         """
@@ -220,9 +217,9 @@ class LargeScaleIsolationForest:
             result = x_sampler[indices]
         elif isinstance(x_sampler, list):
             result = x_sampler[indices]
-        #elif isinstance(x_sampler, BatchSampler):
-        #    result = x_sampler.sample(batch_size)
-        else:
+        elif isinstance(x_sampler, AILibs.BatchSampler):
+            result = x_sampler.sample(batch_size)
+        else:   
             raise Exception("Unsupported input data type")
         
         return numpy.array(result)
