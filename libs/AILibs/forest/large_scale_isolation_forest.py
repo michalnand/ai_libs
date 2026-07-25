@@ -16,7 +16,6 @@ class LargeScaleIsolationForest:
         Liu, Fei Tony, Kai Ming Ting, and Zhi-Hua Zhou.
         "Isolation forest." ICDM, 2008.
     """
-
     def __init__(self, batch_size = 10000, num_trees = 128, min_leaf_size = 1, feature_subsample_ratio = 1.0, projection_dim = -1):
         
         self.batch_size                 = batch_size

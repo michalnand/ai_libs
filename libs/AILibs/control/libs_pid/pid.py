@@ -19,6 +19,13 @@ class PIDTextbook:
         self.err_sum  = 0.0
         self.err_now  = 0.0
         self.err_prev = 0.0 
+
+
+    def reset(self):
+        self.err_sum  = 0.0
+        self.err_now  = 0.0
+        self.err_prev = 0.0 
+
     
 
     def forward(self, xr, x):
@@ -64,7 +71,7 @@ class PIDTextbook:
 '''
 class PID:
 
-    def __init__(self, kp, ki, kd, antiwindup=10**10, du_max=10**10):
+    def __init__(self, kp, ki, kd, antiwindup=10**10):
         # Precompute equivalent discrete-time gains (based on Tustin or backward difference)
         self.k0 = kp + ki + kd      # coefficient for e(n)
         self.k1 = -kp - 2.0 * kd    # coefficient for e(n-1)
@@ -77,7 +84,6 @@ class PID:
         
         # Output constraints
         self.antiwindup = antiwindup  # output saturation (integral windup prevention)
-        self.du_max     = du_max      # maximum change in control signal (rate limit)
 
     def forward(self, xr, x, u_prev):
         '''
@@ -97,9 +103,7 @@ class PID:
 
         # Compute control signal increment (Δu)
         du = self.k0*self.e0 + self.k1*self.e1 + self.k2*self.e2
-
-        # Limit maximum change rate (Δu)
-        du = numpy.clip(du, -self.du_max, self.du_max)
+        
 
         # Compute total control signal with anti-windup (output saturation)
         u = numpy.clip(u_prev + du, -self.antiwindup, self.antiwindup)
