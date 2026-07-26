@@ -1,6 +1,5 @@
 import numpy
 import scipy
-from scipy.stats import chi2
 
 '''
     statedy state kalman filter for discrete dynamical system model : 
