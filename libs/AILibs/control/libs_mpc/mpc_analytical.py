@@ -87,7 +87,7 @@ class MPCAnalytical:
         return u    
     '''
 
-    def forward_traj(self, Xr, x, u_prev):
+    def forward_traj(self, Xr, x):
         # residual
         e = Xr - self.Phi @ x   
 
@@ -98,10 +98,10 @@ class MPCAnalytical:
         return u     
     
 
-    def forward(self, xr, x, u_prev):
+    def forward(self, xr, x):
 
         Xr = []
         for n in range(self.Hp):
             Xr.append(xr)
         Xr = numpy.concatenate(Xr)
-        return self.forward_traj(Xr, x, u_prev)
+        return self.forward_traj(Xr, x)
