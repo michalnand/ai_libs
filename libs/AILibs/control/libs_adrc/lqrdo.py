@@ -33,25 +33,29 @@ class LQRDO:
         self.L = self._solve_kalman(self.A_aug, self.C_aug, Qo, Ro)
         
         # 4. Memory for the next loop
-        self.X_hat = numpy.zeros(self.n + self.m)  # Background simulation state
-        self.u_prev = numpy.zeros(self.m)          # Total effort sent to motors last tick
+        self.reset()
 
     def reset(self):
         """Clear memory (e.g., if the robot is picked up or motors disabled)"""
-        self.X_hat = numpy.zeros(self.n + self.m)
-        self.u_prev = numpy.zeros(self.m)
+        self.X_hat = numpy.zeros((self.n + self.m, 1))
+        self.u_prev = numpy.zeros((self.m, 1))
 
     def forward(self, xr, x):
         """
         Calculates control effort using parallel LQR and DOB.
         """
-        x  = numpy.array(x, dtype=float).flatten()
-        xr = numpy.array(xr, dtype=float).flatten()
+        x  = numpy.array(x, dtype=float)
+        xr = numpy.array(xr, dtype=float)
+
+        #print(x.shape, xr.shape)
 
         # ========================================================
         # BLOCK 1: Direct LQR Control (Raw State Feedback)
         # ========================================================
         u_lqr = -self.K @ (x - xr)
+
+        #print(u_lqr.shape)
+
 
         # ========================================================
         # BLOCK 2: Parallel Kalman Disturbance Observer
