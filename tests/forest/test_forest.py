@@ -43,9 +43,10 @@ class TestIsolationForest:
 
         forest = AILibs.forest.IsolationForest()
         forest.fit(x, max_depth=10, num_trees=128)
-        scores = forest.predict(x)
+        scores = forest.predict(x) 
 
         assert scores.shape == (x.shape[0],)
+        assert scores.shape == y_gt.shape   
 
         # anomalies should score clearly higher than normal points
         mean_normal  = scores[:n_normal].mean()

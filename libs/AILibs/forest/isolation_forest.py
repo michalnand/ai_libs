@@ -50,7 +50,14 @@ class IsolationForest:
 
         self.batch_size = num_subsamples
 
+        if num_subsamples > 0:
+            self.batch_size = num_subsamples
+        else:
+            self.batch_size = self.n_train_samples
+        
+
         return self.forest
+
 
 
     def score(self, x):
@@ -75,6 +82,13 @@ class IsolationForest:
         score_result = numpy.power(2, -avg_path_lengths / c_n)
         
         return score_result
+
+    def predict(self, x_batch):
+        score_result = []
+        for n in range(len(x_batch)):
+            score_result.append(self.score(x_batch[n]))
+
+        return numpy.array(score_result)
 
 
 
