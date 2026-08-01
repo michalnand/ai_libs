@@ -4,7 +4,7 @@
 import pytest
 import numpy
 
-import AILibs
+import AILibs 
 
 
 
@@ -25,15 +25,17 @@ class TestNLrFit:
     def test_polynomial_fit(self, rng):
         sparsity = 0.8
         x = rng.standard_normal((1000, 11))
-        
-        x_tmp = AILibs.common.dictionary.dictionary_polynomial(x, order=3)
 
-        x_const = AILibs.common.dictionary.dictionary_constant(x)
+        # create nonlinear dictionary
+        d_identity   = AILibs.dictionary.Identity()
+        d_constant   = AILibs.dictionary.Constant()
+        d_polynomial = AILibs.dictionary.Polynomial(degree=3)
 
-        x_aug = numpy.concatenate([x, x_const, x_tmp], axis=1)
+        d_all        = AILibs.dictionary.Concatenate([d_identity, d_constant, d_polynomial])
+
+        x_aug = numpy.clip(d_all(x), -10.0, 10.0)
 
         a = rng.standard_normal((x_aug.shape[1], 7))
-
 
         mask = rng.random(a.shape) < sparsity
         a[mask] = 0.0  
@@ -56,14 +58,18 @@ class TestNLrFit:
     def test_dictionary_cross_fit(self, rng):
         sparsity = 0.8
         x = rng.standard_normal((1000, 11))
-        
-        x_tmp = AILibs.common.dictionary.dictionary_cross_products(x)
-        x_const = AILibs.common.dictionary.dictionary_constant(x)
-        x_aug = numpy.concatenate([x, x_const, x_tmp], axis=1)
+    
+        # create nonlinear dictionary
+        d_identity   = AILibs.dictionary.Identity()
+        d_constant   = AILibs.dictionary.Constant()
+        d_cross      = AILibs.dictionary.CrossTerms()
+
+        d_all        = AILibs.dictionary.Concatenate([d_identity, d_constant, d_cross])
+
+        x_aug = numpy.clip(d_all(x), -10.0, 10.0)
+
 
         a = rng.standard_normal((x_aug.shape[1], 7))
-
-
 
         mask = rng.random(a.shape) < sparsity
         a[mask] = 0.0  
@@ -87,9 +93,15 @@ class TestNLrFit:
         sparsity = 0.8
         x = rng.standard_normal((1000, 11))
         
-        x_tmp   = AILibs.common.dictionary.dictionary_sin_cos(x, n_harmonics=5)
-        x_const = AILibs.common.dictionary.dictionary_constant(x)   
-        x_aug   = numpy.concatenate([x, x_const, x_tmp], axis=1)
+        # create nonlinear dictionary
+        d_identity   = AILibs.dictionary.Identity()
+        d_constant   = AILibs.dictionary.Constant()
+        d_wave       = AILibs.dictionary.Wave(n_harmonics=5)
+
+        d_all        = AILibs.dictionary.Concatenate([d_identity, d_constant, d_wave])
+
+        x_aug = numpy.clip(d_all(x), -10.0, 10.0)
+
 
         a = rng.standard_normal((x_aug.shape[1], 7))
 
@@ -115,11 +127,20 @@ class TestNLrFit:
 
     def test_dictionary_sin_cos_cross(self, rng):
         sparsity = 0.8
-        x = rng.standard_normal((1000, 11))
+        x = rng.standard_normal((10000, 11))
         
-        x_tmp   = AILibs.common.dictionary.dictionary_sin_cos_cross(x)
-        x_const = AILibs.common.dictionary.dictionary_constant(x)
-        x_aug   = numpy.concatenate([x, x_const, x_tmp], axis=1)
+
+        # create nonlinear dictionary
+        d_identity   = AILibs.dictionary.Identity()
+        d_constant   = AILibs.dictionary.Constant()
+
+        d_cross      = AILibs.dictionary.CrossTerms()
+        d_wave       = AILibs.dictionary.Wave(d_cross, n_harmonics=5)
+        
+        d_all        = AILibs.dictionary.Concatenate([d_identity, d_constant, d_wave])
+        
+        x_aug = numpy.clip(d_all(x), -10.0, 10.0)
+
 
         a = rng.standard_normal((x_aug.shape[1], 7))
 
@@ -148,11 +169,18 @@ class TestNLrSR3Fit:
     def test_sr3_polynomial_fit(self, rng):
         """SR3 on polynomial dictionary features."""
         sparsity = 0.9
-        x = rng.standard_normal((1000, 8))
+        x = rng.standard_normal((2000, 9))
 
-        x_poly  = AILibs.common.dictionary.dictionary_polynomial(x, order=3)
-        x_const = AILibs.common.dictionary.dictionary_constant(x)
-        x_aug   = numpy.concatenate([x, x_const, x_poly], axis=1)
+
+        # create nonlinear dictionary
+        d_identity   = AILibs.dictionary.Identity()
+        d_constant   = AILibs.dictionary.Constant()
+        d_polynomial = AILibs.dictionary.Polynomial(degree=3)
+
+        d_all        = AILibs.dictionary.Concatenate([d_identity, d_constant, d_polynomial])
+
+        x_aug = numpy.clip(d_all(x), -10.0, 10.0)
+
 
         a, y = _make_sparse_system(rng, x_aug, n_outputs=5, sparsity=sparsity)
 
@@ -170,11 +198,17 @@ class TestNLrSR3Fit:
     def test_sr3_cross_products_fit(self, rng):
         """SR3 on cross-product dictionary features."""
         sparsity = 0.9
-        x = rng.standard_normal((1000, 8))
+        x = rng.standard_normal((2000, 9))
 
-        x_cross = AILibs.common.dictionary.dictionary_cross_products(x)
-        x_const = AILibs.common.dictionary.dictionary_constant(x)
-        x_aug   = numpy.concatenate([x, x_const, x_cross], axis=1)
+        # create nonlinear dictionary
+        d_identity   = AILibs.dictionary.Identity()
+        d_constant   = AILibs.dictionary.Constant()
+        d_cross      = AILibs.dictionary.CrossTerms()
+
+        d_all        = AILibs.dictionary.Concatenate([d_identity, d_constant, d_cross])
+
+        x_aug = numpy.clip(d_all(x), -10.0, 10.0)
+        
 
         a, y = _make_sparse_system(rng, x_aug, n_outputs=5, sparsity=sparsity)
 
@@ -192,11 +226,17 @@ class TestNLrSR3Fit:
     def test_sr3_sin_cos_fit(self, rng):
         """SR3 on sin/cos harmonic dictionary features."""
         sparsity = 0.9
-        x = rng.standard_normal((1000, 8))
+        x = rng.standard_normal((2000, 8))
 
-        x_sc    = AILibs.common.dictionary.dictionary_sin_cos(x, n_harmonics=3)
-        x_const = AILibs.common.dictionary.dictionary_constant(x)
-        x_aug   = numpy.concatenate([x, x_const, x_sc], axis=1)
+        # create nonlinear dictionary
+        d_identity   = AILibs.dictionary.Identity()
+        d_constant   = AILibs.dictionary.Constant()
+        d_wave       = AILibs.dictionary.Wave(n_harmonics=5)
+
+        d_all        = AILibs.dictionary.Concatenate([d_identity, d_constant, d_wave])
+
+        x_aug = numpy.clip(d_all(x), -10.0, 10.0)
+
 
         a, y = _make_sparse_system(rng, x_aug, n_outputs=5, sparsity=sparsity)
 
@@ -215,10 +255,19 @@ class TestNLrSR3Fit:
         """SR3 on sin/cos cross-product dictionary features."""
         sparsity = 0.95
         x = rng.standard_normal((2000, 5))
+    
+        # create nonlinear dictionary
+        d_identity   = AILibs.dictionary.Identity()
+        d_constant   = AILibs.dictionary.Constant()
 
-        x_scc   = AILibs.common.dictionary.dictionary_sin_cos_cross(x)
-        x_const = AILibs.common.dictionary.dictionary_constant(x)
-        x_aug   = numpy.concatenate([x, x_const, x_scc], axis=1)
+        d_cross      = AILibs.dictionary.CrossTerms()
+        d_wave       = AILibs.dictionary.Wave(d_cross, n_harmonics=5)
+        
+        d_all        = AILibs.dictionary.Concatenate([d_identity, d_constant, d_wave])
+        
+        x_aug = numpy.clip(d_all(x), -10.0, 10.0)
+
+        
 
         a, y = _make_sparse_system(rng, x_aug, n_outputs=3, sparsity=sparsity)
 
@@ -238,9 +287,15 @@ class TestNLrSR3Fit:
         sparsity = 0.9
         x = rng.standard_normal((1500, 6))
 
-        x_poly  = AILibs.common.dictionary.dictionary_polynomial(x, order=2)
-        x_const = AILibs.common.dictionary.dictionary_constant(x)
-        x_aug   = numpy.concatenate([x, x_const, x_poly], axis=1)
+        # create nonlinear dictionary
+        d_identity   = AILibs.dictionary.Identity()
+        d_constant   = AILibs.dictionary.Constant()
+        d_polynomial = AILibs.dictionary.Polynomial(degree=3)
+
+        d_all        = AILibs.dictionary.Concatenate([d_identity, d_constant, d_polynomial])
+
+        x_aug = numpy.clip(d_all(x), -10.0, 10.0)
+
 
         a, y = _make_sparse_system(rng, x_aug, n_outputs=4, sparsity=sparsity)
         y_noisy = y + rng.standard_normal(y.shape) * 0.1
@@ -261,9 +316,15 @@ class TestNLrSR3Fit:
         sparsity = 0.95
         x = rng.standard_normal((2000, 6))
 
-        x_poly  = AILibs.common.dictionary.dictionary_polynomial(x, order=2)
-        x_const = AILibs.common.dictionary.dictionary_constant(x)
-        x_aug   = numpy.concatenate([x, x_const, x_poly], axis=1)
+        # create nonlinear dictionary
+        d_identity   = AILibs.dictionary.Identity()
+        d_constant   = AILibs.dictionary.Constant()
+        d_polynomial = AILibs.dictionary.Polynomial(degree=3)
+
+        d_all        = AILibs.dictionary.Concatenate([d_identity, d_constant, d_polynomial])
+
+        x_aug = numpy.clip(d_all(x), -10.0, 10.0)
+        
 
         a, y = _make_sparse_system(rng, x_aug, n_outputs=3, sparsity=sparsity)
 

@@ -219,8 +219,9 @@ class TestRandomForest:
         n_features = 5
 
         x = rng.standard_normal((n_samples, n_features))
-        a = rng.standard_normal((n_features, 1))
-        y = (x @ a).ravel()
+        a = 0.1*rng.standard_normal((n_features, 1))
+        
+        y = (x @ a).ravel() 
 
         forest = AILibs.forest.RandomForest()
         forest.fit(x, y, max_depth=12, num_trees=64)
@@ -242,11 +243,17 @@ class TestRandomForest:
 
         x = rng.standard_normal((n_samples, n_features))
 
-        x_poly = AILibs.common.dictionary.dictionary_polynomial(x, order=3)
-        x_aug  = numpy.concatenate([x, x_poly], axis=1)
+        # create nonlinear dictionary
+        d_identity   = AILibs.dictionary.Identity()
+        d_constant   = AILibs.dictionary.Constant() 
+        d_polynomial = AILibs.dictionary.Polynomial(degree=2)
+
+        d_all        = AILibs.dictionary.Concatenate([d_identity, d_constant, d_polynomial])
+
+        x_aug = numpy.clip(0.1*d_all(x), -10.0, 10.0)
 
         a = rng.standard_normal((x_aug.shape[1], 1))
-        y = (x_aug @ a).ravel()
+        y = (x_aug @ a).ravel()     
 
         forest = AILibs.forest.RandomForest()
         forest.fit(x, y, max_depth=14, num_trees=64)
@@ -288,7 +295,7 @@ class TestRandomForest:
         n_features = 6
 
         x = rng.standard_normal((n_samples, n_features))
-        a = rng.standard_normal((n_features, 1))
+        a = 0.1*rng.standard_normal((n_features, 1))
         y_clean = (x @ a).ravel()
         noise   = rng.standard_normal(n_samples) * 0.3 * numpy.std(y_clean)
         y = y_clean + noise
@@ -313,9 +320,19 @@ class TestRandomForest:
 
         x = rng.standard_normal((n_samples, n_features))
 
-        x_cross = AILibs.common.dictionary.dictionary_cross_products(x)
-        a = rng.standard_normal((x_cross.shape[1], 1))
-        y = (x_cross @ a).ravel()
+        # create nonlinear dictionary
+        d_identity   = AILibs.dictionary.Identity()
+        d_constant   = AILibs.dictionary.Constant()
+        d_cross      = AILibs.dictionary.CrossTerms()
+
+        d_all        = AILibs.dictionary.Concatenate([d_identity, d_constant, d_cross])
+
+        x_aug = numpy.clip(0.1*d_all(x), -10.0, 10.0)
+        
+
+
+        a = rng.standard_normal((x_aug.shape[1], 1))
+        y = (x_aug @ a).ravel()
 
         forest = AILibs.forest.RandomForest()
         forest.fit(x, y, max_depth=14, num_trees=64)
@@ -337,9 +354,15 @@ class TestRandomForest:
 
         x = rng.standard_normal((n_samples, n_features))
 
-        x_poly = AILibs.common.dictionary.dictionary_polynomial(x, order=2)
-        x_aug  = numpy.concatenate([x, x_poly], axis=1)
+        # create nonlinear dictionary
+        d_identity   = AILibs.dictionary.Identity()
+        d_constant   = AILibs.dictionary.Constant()
+        d_polynomial = AILibs.dictionary.Polynomial(degree=2)
 
+        d_all        = AILibs.dictionary.Concatenate([d_identity, d_constant, d_polynomial])
+
+        x_aug = numpy.clip(0.1*d_all(x), -10.0, 10.0)
+        
         a = rng.standard_normal((x_aug.shape[1], 1))
         y = (x_aug @ a).ravel()
 
@@ -363,7 +386,7 @@ class TestRandomForest:
         n_outputs   = 3
 
         x = rng.standard_normal((n_samples, n_features))
-        a = rng.standard_normal((n_features, n_outputs))
+        a = 0.1*rng.standard_normal((n_features, n_outputs))
         y = x @ a
 
         forest = AILibs.forest.RandomForest()

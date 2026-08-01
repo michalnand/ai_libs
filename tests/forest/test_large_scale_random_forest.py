@@ -58,8 +58,15 @@ class TestLargeScaleRandomForest:
 
         x = rng.standard_normal((n_samples, n_features))
 
-        x_poly = AILibs.common.dictionary.dictionary_polynomial(x, order=3)
-        x_aug  = numpy.concatenate([x, x_poly], axis=1)
+        # create nonlinear dictionary
+        d_identity   = AILibs.dictionary.Identity()
+        d_constant   = AILibs.dictionary.Constant()
+        d_polynomial = AILibs.dictionary.Polynomial(degree=3)
+
+        d_all        = AILibs.dictionary.Concatenate([d_identity, d_constant, d_polynomial])
+
+        x_aug = d_all(x)
+        x_aug = numpy.clip(0.1*d_all(x), -10.0, 10.0)
 
         a = rng.standard_normal((x_aug.shape[1], 1))
         y = (x_aug @ a).ravel()
@@ -141,10 +148,19 @@ class TestLargeScaleRandomForest:
 
         x = rng.standard_normal((n_samples, n_features))
 
-        x_cross = AILibs.common.dictionary.dictionary_cross_products(x)
-        a = rng.standard_normal((x_cross.shape[1], 1))
-        y = (x_cross @ a).ravel()
+         # create nonlinear dictionary
+        d_identity   = AILibs.dictionary.Identity()
+        d_constant   = AILibs.dictionary.Constant()
+        d_cross      = AILibs.dictionary.CrossTerms()
 
+        d_all        = AILibs.dictionary.Concatenate([d_identity, d_constant, d_cross])
+
+        x_aug = d_all(x)
+        x_aug = numpy.clip(0.1*d_all(x), -10.0, 10.0)
+
+        a = rng.standard_normal((x_aug.shape[1], 1))
+        y = (x_aug @ a).ravel()
+        
         forest = AILibs.LargeScaleRandomForest(
             batch_size=512, 
             num_trees=64, 
@@ -169,9 +185,17 @@ class TestLargeScaleRandomForest:
 
         x = rng.standard_normal((n_samples, n_features))
 
-        x_poly = AILibs.common.dictionary.dictionary_polynomial(x, order=2)
-        x_aug  = numpy.concatenate([x, x_poly], axis=1)
+        # create nonlinear dictionary
+        d_identity   = AILibs.dictionary.Identity()
+        d_constant   = AILibs.dictionary.Constant()
+        d_polynomial = AILibs.dictionary.Polynomial(degree=3)
 
+        d_all        = AILibs.dictionary.Concatenate([d_identity, d_constant, d_polynomial])
+
+        x_aug = d_all(x)
+        x_aug = numpy.clip(0.1*d_all(x), -10.0, 10.0)
+        
+ 
         a = rng.standard_normal((x_aug.shape[1], 1))
         y = (x_aug @ a).ravel()
 
