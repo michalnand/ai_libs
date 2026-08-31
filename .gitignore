@@ -65,3 +65,6 @@ nosetests.xml
 ._*
 .Spotlight-V100
 .Trashes
+
+
+results/

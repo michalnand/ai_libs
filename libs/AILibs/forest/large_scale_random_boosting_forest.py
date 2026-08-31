@@ -29,7 +29,7 @@ class LargeScaleRandomBoostingForest:
         self.feature_subsample_ratio    = feature_subsample_ratio
 
 
-    def fit(self, x_sampler):
+    def fit(self, x_sampler, verbose = False):
         """
         Build an ensemble of sequentially boosted trees from training data sampler.
 
@@ -77,6 +77,9 @@ class LargeScaleRandomBoostingForest:
             result_tree["tree"]             = self._tree_recursion(x_selected, residuals, 0, 1e-6)
 
             self.forest.append(result_tree)
+
+            if verbose:
+                print("fit tree num ", n, "\t\tloss = ", round((residuals**2).mean(), 6))
 
         return self.forest
 

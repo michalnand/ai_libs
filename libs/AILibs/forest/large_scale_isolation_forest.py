@@ -27,7 +27,7 @@ class LargeScaleIsolationForest:
 
 
     
-    def fit(self, x_sampler):
+    def fit(self, x_sampler, verbose=False):
         """
         Build an ensemble of isolation trees from training data.
 
@@ -78,6 +78,10 @@ class LargeScaleIsolationForest:
             result_tree["tree"]                 = self._tree_recursion(x_proj, 0, 1e-6)  
 
             self.forest.append(result_tree)
+
+            if verbose:
+                print("fit tree num ", n)
+            
 
         return self.forest
 

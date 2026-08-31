@@ -19,7 +19,7 @@ def auc_roc(y_gt, y_scores):
         Continuous anomaly scores (higher = more anomalous).
 
     Returns
-    -------
+    ------- 
     float
         AUC-ROC value.
     """
