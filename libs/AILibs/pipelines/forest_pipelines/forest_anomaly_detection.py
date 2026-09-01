@@ -51,10 +51,8 @@ class ForestAnomalyDetection:
         y_gt   = numpy.array(y_gt) 
         y_pred = numpy.array(y_pred)
         
-        y_pred = (y_pred - y_pred.min())/(y_pred.max() - y_pred.min())
-
-        if self.threshold is None:
-            self.threshold = AILibs.metrics.tune_threshold(y_gt, y_pred, metric="f1")
+        if self.threshold is None:  
+            self.threshold = AILibs.metrics.tune_threshold(y_gt, y_pred)
             print("autotune threshold to ", self.threshold)
 
         metrics = AILibs.metrics.anomaly_evaluation(y_gt, y_pred, th=self.threshold)

@@ -13,3 +13,6 @@ from .datasets             import *
 from .control              import *
 
 from .pipelines             import *
+
+
+from .models            import * 

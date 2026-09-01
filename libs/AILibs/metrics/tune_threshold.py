@@ -1,69 +1,71 @@
 import numpy 
 
 
-def tune_threshold(y_gt, y_scores, metric="f1", steps=100):
+def tune_threshold(y_gt: numpy.ndarray, y_pred: numpy.ndarray, steps: int = 100, beta : float = 1.0):
+
+    thresholds = numpy.linspace(y_pred.min(), y_pred.max(), steps) 
+
+    
+    y_gt_tmp = y_gt > 0.5 
+
+    f_scores = []
+    for threshold in thresholds:
+        preds = y_pred >= threshold
+
+        #print(">>> ", y_pred.shape, y_gt_tmp.shape, preds.shape)
+
+        TP = (preds & y_gt_tmp).sum()
+        FP = (preds & ~y_gt_tmp).sum() 
+        FN = (~preds & y_gt_tmp).sum()
+
+        precission  = TP/(TP + FP)
+        recall      = TP/(TP + FN)
+
+
+        num = (1 + beta**2) * (precission * recall)
+        den = (beta**2 * precission) + recall
+
+        f1 = num/(den + 10e-10)
+
+        f_scores.append(f1)
+
+    f_scores = numpy.array(f_scores)
+    best_idx = numpy.argmax(f_scores)
+
+    threshold = round(thresholds[best_idx], 4) 
+
+    return threshold
+
+
+
+def tune_threshold_OLD(y_gt: numpy.ndarray, y_pred: numpy.ndarray, beta: float = 1.0, steps: int = 100):
     """
-    Find the optimal binarisation threshold for anomaly scores.
-
-    Sweeps thresholds uniformly from 0 to 1 and returns the one that
-    maximises the chosen metric.  Useful when a detector outputs
-    continuous scores and you need to pick a decision boundary.
-
-    Parameters
-    ----------
-    y_gt : array-like
-        Binary ground truth labels (0 = normal, 1 = anomaly).
-    y_scores : array-like
-        Continuous anomaly scores (higher = more anomalous).
-    metric : str, optional
-        Metric to maximise.  One of:
-        - ``'f1'``      – F1 score (harmonic mean of precision and recall).
-        - ``'mcc'``     – Matthews Correlation Coefficient (balanced metric
-          that accounts for all four confusion-matrix cells).
-        - ``'youden'``  – Youden's J statistic (recall − FPR), equivalent to
-          maximising the vertical distance to the ROC diagonal.
-    steps : int, optional
-        Number of equally-spaced thresholds to evaluate (default 100).
-
-    Returns
-    -------
-    float
-        Threshold value (rounded to 5 decimal places) that maximises the
-        chosen metric.
+    Tunes anomaly threshold using F-beta score (beta=1.0 is F1).    
+    Evaluates 'steps' evenly spaced thresholds across the y_pred range.
     """
-    y_gt     = numpy.asarray(y_gt, dtype=numpy.int32)
-    y_scores = numpy.asarray(y_scores, dtype=numpy.float64)
-
-    best_th  = 0.5
-    best_val = -1.0
-
-    for th in numpy.linspace(0.0, 1.0, steps):
-        # Binarise predictions at the current threshold
-        y_pred = (y_scores > th).astype(int)
-
-        # Confusion matrix
-        TP = numpy.sum((y_gt == 1) & (y_pred == 1))
-        FP = numpy.sum((y_gt == 0) & (y_pred == 1))
-        FN = numpy.sum((y_gt == 1) & (y_pred == 0))
-        TN = numpy.sum((y_gt == 0) & (y_pred == 0))
-
-        # Compute the requested metric
-        precision = TP / (TP + FP) if (TP + FP) > 0 else 0.0
-        recall    = TP / (TP + FN) if (TP + FN) > 0 else 0.0
-        f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
-
-        mcc_num = TP * TN - FP * FN
-        mcc_den = numpy.sqrt(float((TP + FP) * (TP + FN) * (TN + FP) * (TN + FN)))
-        mcc = mcc_num / mcc_den if mcc_den > 0 else 0.0
-
-        # Youden's J = sensitivity − FPR  (optimal ROC operating point)
-        fpr    = FP / (FP + TN) if (FP + TN) > 0 else 0.0
-        youden = recall - fpr
-
-        val = {"f1": f1, "mcc": mcc, "youden": youden}[metric]
-
-        if val > best_val:
-            best_val = val
-            best_th  = th
-
-    return round(float(best_th), 5)
+    y_gt = numpy.asarray(y_gt, dtype=bool)
+    
+    # Generate thresholds and reshape to (steps, 1) for broadcasting
+    thresholds = numpy.linspace(y_pred.min(), y_pred.max(), steps)[:, None]
+    
+    # preds matrix shape: (steps, N)
+    preds = y_pred >= thresholds
+    
+    # Vectorized TP, FP, FN calculations across all thresholds
+    TP = (preds & y_gt).sum(axis=1)
+    FP = (preds & ~y_gt).sum(axis=1)
+    FN = (~preds & y_gt).sum(axis=1)
+    
+    # Safe Precision and Recall (avoids division by zero)
+    P = numpy.divide(TP, TP + FP, out=numpy.zeros(steps), where=(TP + FP) > 0)
+    R = numpy.divide(TP, TP + FN, out=numpy.zeros(steps), where=(TP + FN) > 0)
+    
+    # Safe F-beta Score
+    num = (1 + beta**2) * (P * R)
+    den = (beta**2 * P) + R
+    f_scores = numpy.divide(num, den, out=numpy.zeros(steps), where=den > 0)
+    
+    # Extract best threshold and score
+    best_idx = numpy.argmax(f_scores)
+    
+    return thresholds[best_idx, 0] #, f_scores[best_idx]

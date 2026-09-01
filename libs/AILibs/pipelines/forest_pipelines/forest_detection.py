@@ -49,9 +49,9 @@ class ForestDetection:
             
         y_gt  = numpy.array(y_gt) 
         y_pred = numpy.array(y_pred)
-
+    
         if self.threshold is None:
-            self.threshold = AILibs.metrics.tune_threshold(y_gt, y_pred, metric="f1")
+            self.threshold = AILibs.metrics.tune_threshold(y_gt, y_pred)
             print("autotune threshold to ", self.threshold)
 
         metrics = AILibs.metrics.detection_evaluation(y_gt, y_pred, th=self.threshold)
@@ -61,7 +61,7 @@ class ForestDetection:
     def predict(self, x):
         return self.forest.predict(x)
 
-
+ 
     def _save(self, metrics, y_gt, y_pred):
 
         # 1. Create result directory if it doesn't exist
