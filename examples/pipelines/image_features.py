@@ -4,7 +4,8 @@ class Config:
 
     def __init__(self):
 
-        self.dataset_root_path = "/Users/michal/datasets/textures/"
+        #self.dataset_root_path = "/Users/michal/datasets/textures/"
+        self.dataset_root_path = "/home/michal/datasets/unlabeled_images/"
         self.dataset = AILibs.DatasetImages(self.dataset_root_path)
         
         self.num_steps  = 1000000
