@@ -6,6 +6,8 @@ class CNNBlock(torch.nn.Module):
     def __init__(self, in_ch, h_ch, out_ch, stride = 1):
         super().__init__()
 
+        self.norm_0 = torch.nn.BatchNorm2d(in_ch, affine=False)
+
         self.conv0 = torch.nn.Conv2d(in_ch, h_ch, kernel_size=3, stride=stride, padding=1)
         self.act0  = torch.nn.SiLU()
 
@@ -31,6 +33,8 @@ class CNNBlock(torch.nn.Module):
             
 
     def forward(self, x):
+        x = self.norm_0(x)
+
         y = self.conv0(x)
         y = self.act0(y)
 
@@ -53,10 +57,10 @@ class MLPModel(torch.nn.Module):
         self.act_0 = torch.nn.SiLU()
         self.lin_1 = torch.nn.Linear(num_hidden, num_inputs)
 
-        torch.nn.init.orthogonal_(self.lin_0.weight, gain=1.0)
+        torch.nn.init.orthogonal_(self.lin_0.weight, gain=0.5)
         torch.nn.init.zeros_(self.lin_0.bias)
 
-        torch.nn.init.orthogonal_(self.lin_1.weight, gain=1.0)
+        torch.nn.init.orthogonal_(self.lin_1.weight, gain=0.01)
         torch.nn.init.zeros_(self.lin_1.bias)
 
     def forward(self, x):
