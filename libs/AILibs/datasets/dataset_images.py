@@ -6,8 +6,8 @@ from .images_loader import *
 from .dataset_collator import *
 
 class DatasetImages:
-    def __init__(self, root_path, num_workers=16):
-        dirs = os.listdir(root_path)    
+    def __init__(self, root_path, num_workers=4):
+        dirs = os.listdir(root_path)       
         print(dirs)
 
         self.images_datasets = []
@@ -29,7 +29,7 @@ class DatasetImages:
         if not hasattr(self.thread_local, 'rng'):
             # default_rng() pulls fresh entropy from the OS, guaranteeing unique sequences
             self.thread_local.rng = numpy.random.default_rng()
-        return self.thread_local.rng
+        return self.thread_local.rng    
 
     def get(self, idx):
         return self.dataset[idx]
