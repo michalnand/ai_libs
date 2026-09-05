@@ -13,7 +13,7 @@ from functools import partial
 # Keeping this global or at the class-level means threads stay alive waiting for work.
 SHARED_EXECUTOR = ThreadPoolExecutor(max_workers=8) 
 
-
+    
 def _crop_single(x_tmp, min_dim, prob):
     """Worker function for a single image crop."""
     if numpy.random.rand() < prob:

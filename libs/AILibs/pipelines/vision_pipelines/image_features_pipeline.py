@@ -154,17 +154,16 @@ class ImageFeaturesPipeline:
 
         
         # optional features projector, isolate self supervised loss
-        '''
         if hasattr(self.model, "forward_projector"):
             valid_zs0_proj = self.model.forward_projector(valid_zs0)
             valid_zs1_proj = self.model.forward_projector(valid_zs1)
         else:
             valid_zs0_proj = valid_zs0
             valid_zs1_proj = valid_zs1
-        '''
+        
 
-        valid_zs0_proj = valid_zs0
-        valid_zs1_proj = valid_zs1
+        #valid_zs0_proj = valid_zs0
+        #valid_zs1_proj = valid_zs1
 
 
         loss_ssl = self.ssl_loss_func(valid_zs0_proj) + self.ssl_loss_func(valid_zs1_proj)

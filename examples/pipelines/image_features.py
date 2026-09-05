@@ -8,7 +8,7 @@ class Config:
         self.dataset_root_path = "/home/michal/datasets/unlabeled_images/"
         self.dataset = AILibs.DatasetImages(self.dataset_root_path)
         
-        self.num_steps  = 1000000
+        self.num_steps  = 100000
         self.batch_size = 128
 
         self.width      = 256   
