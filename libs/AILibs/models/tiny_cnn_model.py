@@ -93,7 +93,7 @@ class TinyCNNModel(torch.nn.Module):
         torch.nn.init.orthogonal_(self.conv_out.weight, gain=1.0)
         torch.nn.init.zeros_(self.conv_out.bias)    
 
-        self.projector = MLPModel(num_features, 2*num_features)
+        #self.projector = MLPModel(num_features, 2*num_features)
 
 
 
@@ -111,5 +111,5 @@ class TinyCNNModel(torch.nn.Module):
 
         return y
 
-    def forward_projector(self, z):
-        return self.projector(z) + z
+    #def forward_projector(self, z):
+    #    return self.projector(z) + z
