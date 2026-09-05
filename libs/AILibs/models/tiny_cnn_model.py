@@ -45,6 +45,26 @@ class CNNBlock(torch.nn.Module):
 
         return y
 
+class MLPModel(torch.nn.Module):
+    def __init__(self, num_inputs, num_hidden):
+        super().__init__()
+
+        self.lin_0 = torch.nn.Linear(num_inputs, num_hidden)
+        self.act_0 = torch.nn.SiLU()
+        self.lin_1 = torch.nn.Linear(num_hidden, num_inputs)
+
+        torch.nn.init.orthogonal_(self.lin_0.weight, gain=1.0)
+        torch.nn.init.zeros_(self.lin_0.bias)
+
+        torch.nn.init.orthogonal_(self.lin_1.weight, gain=1.0)
+        torch.nn.init.zeros_(self.lin_1.bias)
+
+    def forward(self, x):
+        y = self.lin_0(x)
+        y = self.act_0(y)
+        y = self.lin_1(y)
+
+        return y
 
 
 class TinyCNNModel(torch.nn.Module):
@@ -69,12 +89,9 @@ class TinyCNNModel(torch.nn.Module):
         torch.nn.init.orthogonal_(self.conv_out.weight, gain=1.0)
         torch.nn.init.zeros_(self.conv_out.bias)    
 
-        self.projector = torch.nn.Linear(num_features, 2*num_features)
+        self.projector = MLPModel(num_features, 2*num_features)
 
-        # Gain 1.0 for the SSL projector    
-        torch.nn.init.orthogonal_(self.projector.weight, gain=1.0)
-        torch.nn.init.zeros__(self.projector.bias)
-        
+
 
     def forward(self, x):
 
@@ -91,4 +108,4 @@ class TinyCNNModel(torch.nn.Module):
         return y
 
     def forward_projector(self, z):
-        return self.projector(z)
+        return self.projector(z) + z
