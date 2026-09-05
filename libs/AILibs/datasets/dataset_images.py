@@ -6,8 +6,8 @@ from .images_loader import *
 from .dataset_collator import *
 
 class DatasetImages:
-    def __init__(self, root_path, num_workers=8):
-        dirs = os.listdir(root_path)
+    def __init__(self, root_path, num_workers=16):
+        dirs = os.listdir(root_path)    
         print(dirs)
 
         self.images_datasets = []
