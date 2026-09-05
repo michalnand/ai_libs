@@ -1,6 +1,7 @@
 from .configs           import *
 from .forest_pipelines  import *
 from .nn_pipelines      import *
+from .vision_pipelines  import *
 
 
 from .segmentation_augmentation         import *
