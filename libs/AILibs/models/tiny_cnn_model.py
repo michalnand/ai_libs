@@ -69,10 +69,11 @@ class TinyCNNModel(torch.nn.Module):
         torch.nn.init.orthogonal_(self.conv_out.weight, gain=1.0)
         torch.nn.init.zeros_(self.conv_out.bias)    
 
-        self.projector = torch.nn.Linear(num_features, 2*num_features, bias=False)
+        self.projector = torch.nn.Linear(num_features, 2*num_features)
 
-        # Gain 1.0 for the SSL projector
+        # Gain 1.0 for the SSL projector    
         torch.nn.init.orthogonal_(self.projector.weight, gain=1.0)
+        torch.nn.init.zeros__(self.projector.bias)
         
 
     def forward(self, x):

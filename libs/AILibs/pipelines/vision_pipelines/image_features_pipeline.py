@@ -160,10 +160,6 @@ class ImageFeaturesPipeline:
         else:
             valid_zs0_proj = valid_zs0
             valid_zs1_proj = valid_zs1
-        
-
-        #valid_zs0_proj = valid_zs0
-        #valid_zs1_proj = valid_zs1
 
 
         loss_ssl = self.ssl_loss_func(valid_zs0_proj) + self.ssl_loss_func(valid_zs1_proj)
@@ -181,6 +177,10 @@ class ImageFeaturesPipeline:
             # Mean, and Standard deviation across features
             z_mag = (valid_zs0**2).mean().item()
             z_std = valid_zs0.std(dim=0).mean().item()
+
+            z_proj_mag = (valid_zs0_proj**2).mean().item()
+            z_proj_std = valid_zs0_proj.std(dim=0).mean().item()
+            
             # Ratio of points that fell inside the valid frame
             valid_ratio = valid_mask.float().mean().item()
             valid_count = valid_mask.sum().item()
@@ -217,6 +217,10 @@ class ImageFeaturesPipeline:
 
             "z_mag": round(z_mag, 5),   
             "z_std": round(z_std, 5),
+
+            "z_proj_mag": round(z_proj_mag, 5),   
+            "z_proj_std": round(z_proj_std, 5), 
+
             "pos_cos": round(pos_cos, 5),
             "neg_cos": round(neg_cos, 5),
 
