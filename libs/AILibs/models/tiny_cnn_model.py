@@ -6,7 +6,7 @@ class CNNBlock(torch.nn.Module):
     def __init__(self, in_ch, h_ch, out_ch, stride = 1):
         super().__init__()
 
-        self.norm_0 = torch.nn.BatchNorm2d(in_ch, affine=False)
+        self.norm_0 = torch.nn.InstanceNorm2d(in_ch, affine=True)
 
         self.conv0 = torch.nn.Conv2d(in_ch, h_ch, kernel_size=3, stride=stride, padding=1)
         self.act0  = torch.nn.SiLU()
