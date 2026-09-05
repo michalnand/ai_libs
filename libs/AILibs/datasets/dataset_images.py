@@ -24,6 +24,8 @@ class DatasetImages:
         # 2. Setup thread-local storage for independent Random Generators
         self.thread_local = threading.local()
 
+        print("total images count ", len(self.dataset)) 
+
     def _get_thread_rng(self):
         """Ensures each thread gets its own isolated NumPy random generator."""
         if not hasattr(self.thread_local, 'rng'):
