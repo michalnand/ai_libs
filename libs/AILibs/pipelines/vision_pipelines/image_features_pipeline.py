@@ -68,7 +68,7 @@ class ImageFeaturesPipeline:
 
             log_result.update(metrics)
 
-            if (step%1) == 0:
+            if (step%10) == 0:
                 # JSONL Logging: flush every line
                 with open(self.log_file, 'a') as f:
                     str_out = json.dumps(log_result)
