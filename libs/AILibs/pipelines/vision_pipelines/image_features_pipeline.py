@@ -106,7 +106,7 @@ class ImageFeaturesPipeline:
 
         # geometric augmentations
         M, M_inv = generate_affine_matrices(batch_size)
-        x1 = affine_augmentation(x1, M_inv.to(self.device))
+        x1 = affine_augmentation(x1, M_inv)
 
         x0 = x0.float().to(self.device) 
         x1 = x1.float().to(self.device)
