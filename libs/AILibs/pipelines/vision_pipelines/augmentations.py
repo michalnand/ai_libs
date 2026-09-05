@@ -5,63 +5,60 @@ import random
 import numpy
 import random
 
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
+
+# 1. Create a persistent thread pool. 
+# Adjust max_workers to match your CPU cores (or 2-4x cores for IO/CV tasks).
+# Keeping this global or at the class-level means threads stay alive waiting for work.
+SHARED_EXECUTOR = ThreadPoolExecutor(max_workers=8) 
+
+
+def _crop_single(x_tmp, min_dim, prob):
+    """Worker function for a single image crop."""
+    if numpy.random.rand() < prob:
+        height = x_tmp.shape[1]
+        width  = x_tmp.shape[2]
+
+        min_original_dim = min(height, width)
+        s_min = min(1.0, min_dim / min_original_dim)
+        scale = random.uniform(s_min, 1.0)
+        
+        crop_h = int(round(height * scale))
+        crop_w = int(round(width * scale))
+        
+        crop_h = min(height, max(1, crop_h))
+        crop_w = min(width, max(1, crop_w))
+
+        y_start = random.randint(0, height - crop_h)
+        x_start = random.randint(0, width - crop_w)
+
+        y_end   = y_start + crop_h
+        x_end   = x_start + crop_w  
+
+        # Slice and copy to ensure a clean contiguous array
+        y = x_tmp[:, y_start:y_end, x_start:x_end]
+        return numpy.array(y)
+    else:
+        return numpy.array(x_tmp)
+
 def crop_augmentation(x: list, min_dim: int = 64, prob: float = 0.5):
-    y_res = []
+    # partial binds the extra arguments so map() can just pass the image
+    worker = partial(_crop_single, min_dim=min_dim, prob=prob)
+    
+    # map distributes the list across the active threads in the pool
+    return list(SHARED_EXECUTOR.map(worker, x))
 
-    # x : list of images, numpy arrays, shape (3, height, width)
-    for n in range(len(x)):
-        x_tmp = x[n]
 
-        if numpy.random.rand() < prob:
-            height = x_tmp.shape[1]
-            width  = x_tmp.shape[2]
+def _resize_single(x_tmp, width, height):
+    """Worker function for a single image resize."""
+    x_tmp = numpy.moveaxis(x_tmp, 0, 2)
+    y = cv2.resize(x_tmp, (width, height))
+    return numpy.moveaxis(y, 2, 0)
 
-            # 1. Find the smallest dimension of the original image
-            min_original_dim = min(height, width)
-            
-            # 2. Calculate minimum allowed scale factor to ensure the smaller edge >= min_dim
-            # (We cap it at 1.0 to prevent scaling up if the image is already smaller than min_dim)
-            s_min = min(1.0, min_dim / min_original_dim)
-            
-            # 3. Pick a random scale factor between s_min and 1.0
-            scale = random.uniform(s_min, 1.0)
-            
-            # 4. Apply the same scale factor to both height and width to maintain aspect ratio
-            crop_h = int(round(height * scale))
-            crop_w = int(round(width * scale))
-            
-            # (Safety check to ensure rounding doesn't exceed original dimensions)
-            crop_h = min(height, max(1, crop_h))
-            crop_w = min(width, max(1, crop_w))
-
-            # 5. Randomly decide the top-left starting coordinate
-            y_start = random.randint(0, height - crop_h)
-            x_start = random.randint(0, width - crop_w)
-
-            # 6. Calculate the bottom-right ending coordinate
-            y_end   = y_start + crop_h
-            x_end   = x_start + crop_w  
-
-            # Slice the array: keeping all channels, cropping height and width
-            y = x_tmp[:, y_start:y_end, x_start:x_end]
-            y_res.append(numpy.array(y))
-
-        else:
-            y_res.append(numpy.array(x_tmp))
-
-    return y_res
-
-def resize_augmentation(x : list, width : int, height : int):
-    y_res = []
-
-    for n in range(len(x)):
-        x_tmp = x[n]
-        x_tmp = numpy.moveaxis(x_tmp, 0, 2)
-        y = cv2.resize(x_tmp, (width, height))
-        y = numpy.moveaxis(y, 2, 0)
-        y_res.append(y)
-
-    return y_res
+def resize_augmentation(x: list, width: int, height: int):
+    worker = partial(_resize_single, width=width, height=height)
+    return list(SHARED_EXECUTOR.map(worker, x))
 
 
 
