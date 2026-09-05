@@ -68,7 +68,7 @@ class ImageFeaturesPipeline:
 
             log_result.update(metrics)
 
-            if (step%100) == 0:
+            if (step%1) == 0:
                 # JSONL Logging: flush every line
                 with open(self.log_file, 'a') as f:
                     str_out = json.dumps(log_result)
@@ -96,7 +96,7 @@ class ImageFeaturesPipeline:
         x = resize_augmentation(x, self.width, self.height)
 
         x = numpy.array(x, dtype=numpy.float32)
-        x = torch.from_numpy(x)
+        x = torch.from_numpy(x).to(self.device)
 
         
 
@@ -106,7 +106,7 @@ class ImageFeaturesPipeline:
 
         # geometric augmentations
         M, M_inv = generate_affine_matrices(batch_size)
-        x1 = affine_augmentation(x1, M_inv)
+        x1 = affine_augmentation(x1, M_inv.to(self.device))
 
         x0 = x0.float().to(self.device) 
         x1 = x1.float().to(self.device)
