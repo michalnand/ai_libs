@@ -54,8 +54,8 @@ class ConfigB:
 
 if __name__ == "__main__":
     
-    config = ConfigA()
-    #config = ConfigB()
+    #config = ConfigA()
+    config = ConfigB()
 
     pipeline = AILibs.ImageFeaturesPipeline(config)
 
