@@ -13,10 +13,7 @@ def stats(x):
     )
 
 def features_similarity(za, zb, result_path):
-    # Ensure result_path ends with a slash for file saving
-    if not result_path.endswith('/') and not result_path.endswith('\\'):
-        result_path += '/'
-        
+   
     num_samples, num_features = za.shape
 
     # 1. Negative Sampling
