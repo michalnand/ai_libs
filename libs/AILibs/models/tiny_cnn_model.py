@@ -72,7 +72,7 @@ class MLPModel(torch.nn.Module):
 
 
 class TinyCNNModel(torch.nn.Module):
-    def __init__(self, in_ch = 3, num_features = 128):
+    def __init__(self, in_ch = 3, num_features = 128, use_projector = False):
         super().__init__()
 
         self.conv_in = torch.nn.Conv2d(in_ch, 32, kernel_size=7, stride=2, padding=7//2)
@@ -93,7 +93,10 @@ class TinyCNNModel(torch.nn.Module):
         torch.nn.init.orthogonal_(self.conv_out.weight, gain=1.0)
         torch.nn.init.zeros_(self.conv_out.bias)    
 
-        #self.projector = MLPModel(num_features, 2*num_features)
+        if use_projector:
+            self.projector = MLPModel(num_features, 2*num_features)
+        else:
+            self.projector = None
 
 
 
@@ -110,6 +113,3 @@ class TinyCNNModel(torch.nn.Module):
         y = self.conv_out(y)
 
         return y
-
-    #def forward_projector(self, z):
-    #    return self.projector(z) + z
