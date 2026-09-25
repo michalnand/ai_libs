@@ -95,8 +95,7 @@ class TinyCNNModel(torch.nn.Module):
 
         if use_projector:
             self.projector = MLPModel(num_features, 2*num_features)
-        else:
-            self.projector = None
+        
 
 
 

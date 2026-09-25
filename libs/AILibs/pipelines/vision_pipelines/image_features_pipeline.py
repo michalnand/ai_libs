@@ -151,7 +151,7 @@ class ImageFeaturesPipeline:
             print("d_valid_zs = ", ((valid_zs0 - valid_zs1)**2).mean())
 
             print("\n\n\n")
-            
+
         
         # optional features projector, isolate self supervised loss
         if hasattr(self.model, "projector"):
