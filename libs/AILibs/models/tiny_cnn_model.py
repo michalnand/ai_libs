@@ -93,9 +93,9 @@ class TinyCNNModel(torch.nn.Module):
         torch.nn.init.orthogonal_(self.conv_out.weight, gain=1.0)
         torch.nn.init.zeros_(self.conv_out.bias)    
 
-        if use_projector:
-            self.projector = MLPModel(num_features, 2*num_features)
-        
+        if use_projector: 
+            self.projector = torch.nn.Linear(num_features, 2*num_features, bias=False)
+
 
 
 
