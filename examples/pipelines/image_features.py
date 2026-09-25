@@ -42,7 +42,7 @@ class ConfigB:
         self.height     = 256 
         
         self.num_points = 32
-        self.model      = AILibs.TinyCNNModel(in_ch = 3, num_features = 128, use_projector = True)
+        self.model      = AILibs.TinyCNNModel(in_ch = 3, num_features = 64, use_projector = True)
 
         self.learning_rate = 0.001
         self.w_sim         = 1.0
