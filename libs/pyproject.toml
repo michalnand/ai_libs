@@ -17,9 +17,11 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+  "torch",
   "pytest",
   "black",
   "mypy"
+  "hdbscan"
 ]
 
 [tool.setuptools.packages.find]
