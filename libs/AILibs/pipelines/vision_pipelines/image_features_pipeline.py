@@ -89,7 +89,7 @@ class ImageFeaturesPipeline:
     def train_batch(self, x):
         batch_size = len(x)
             
-
+        
         x = crop_augmentation(x, 32, 0.5)  
 
         # all images to fixed size
@@ -233,10 +233,10 @@ class ImageFeaturesPipeline:
             "pos_dist_std": round(pos_dist_std, 5),
             "neg_dist_std": round(neg_dist_std, 5),
 
-            "valid_ratio": round(valid_ratio, 3),
-            "valid_count": round(valid_count, 3),
+            **spectrum,
 
-            **spectrum
+            "valid_ratio": round(valid_ratio, 3),
+            "valid_count": round(valid_count, 3)
         }   
 
 
