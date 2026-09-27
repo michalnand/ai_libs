@@ -201,6 +201,8 @@ class ImageFeaturesPipeline:
                 neg_dist        = d_neg.mean().item()
                 pos_dist_std    = d_pos.std().item()
                 neg_dist_std    = d_neg.std().item()  
+
+                spectrum        = self._compute_variance_spectrum(valid_zs0)
             else:
                 pos_cos         = 0.0
                 neg_cos         = 0.0
@@ -209,6 +211,7 @@ class ImageFeaturesPipeline:
                 neg_dist        = 0.0
                 pos_dist_std    = 0.0
                 neg_dist_std    = 0.0
+                spectrum        = {"exp_var_1s" : -1,  "exp_var_2s" : -1, "exp_var_3s" : -1}
 
         return {
             "loss_total": round(loss.item(), 5),
@@ -231,8 +234,10 @@ class ImageFeaturesPipeline:
             "neg_dist_std": round(neg_dist_std, 5),
 
             "valid_ratio": round(valid_ratio, 3),
-            "valid_count": round(valid_count, 3)
-        }
+            "valid_count": round(valid_count, 3),
+
+            **spectrum
+        }   
 
 
     def _sample_matching_features(self, z0, z1, M, num_points):
@@ -261,3 +266,44 @@ class ImageFeaturesPipeline:
         valid_mask = (p1[:, :, 0].abs() <= 1.0) & (p1[:, :, 1].abs() <= 1.0) # (B, K)
 
         return feat0, feat1, valid_mask
+
+
+    def _compute_variance_spectrum(self, z):
+        """
+        Computes the number of features required to explain 68%, 95%, and 99.7% 
+        of the variance in a batch of representations.
+        
+        Args:
+            z (torch.Tensor): Feature batch of shape (Batch_Size, Dimensions).
+            
+        Returns:
+            dict: Number of dimensions required for each variance threshold.
+        """
+        z = z.detach()
+
+        # 1. Center the batch data (mean of 0 along the batch dimension)
+        z_centered = z - z.mean(dim=0, keepdim=True)
+
+        # 2. Compute singular values (S is returned in descending order)
+        # Using svdvals is much faster than torch.svd or torch.linalg.svd
+        S = torch.linalg.svdvals(z_centered)
+        
+        # 3. Variance is proportional to the square of singular values (eigenvalues)
+        eigenvalues = S ** 2
+        
+        # 4. Compute cumulative explained variance ratio
+        cum_var_ratio = torch.cumsum(eigenvalues, dim=0) / eigenvalues.sum()
+        
+        # 5. Helper function to find the minimum number of components for a threshold
+        def get_n_features(threshold: float) -> int:
+            # Find the first index where cumulative variance is >= threshold
+            idx = (cum_var_ratio >= threshold).nonzero(as_tuple=True)[0]
+            if len(idx) > 0:
+                return idx[0].item() + 1 # +1 because indices are 0-based
+            return z.shape[1] # Fallback to max dimensions if threshold isn't cleanly met
+            
+        return {
+            "exp_var_1s": get_n_features(0.68),   # 68% variance
+            "exp_var_2s": get_n_features(0.95),   # 95% variance
+            "exp_var_3s": get_n_features(0.997)   # 99.7% variance
+        }
