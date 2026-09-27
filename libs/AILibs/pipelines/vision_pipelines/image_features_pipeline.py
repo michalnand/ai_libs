@@ -53,22 +53,27 @@ class ImageFeaturesPipeline:
         k = 0.1
         for step in range(self.num_steps):
 
+            if (step%10) == 0:
+                log_enabled = True
+            else:
+                log_enabled = False
+
             time_start = time.time()
             x = self.dataset.get_batch(self.batch_size)
-            metrics = self.train_batch(x)
+            metrics = self.train_batch(x, log_enabled)
             time_stop = time.time() 
 
 
             steps_per_second = (1.0 - k)*steps_per_second + k/(time_stop - time_start)
 
             # Add step counter to metrics
-            log_result={}
-            log_result["step"]            = step
-            log_result["step_per_second"] = round(steps_per_second, 2)
+            if log_enabled:
+                log_result={}
+                log_result["step"]            = step
+                log_result["step_per_second"] = round(steps_per_second, 2)
 
-            log_result.update(metrics)
+                log_result.update(metrics)
 
-            if (step%10) == 0:
                 # JSONL Logging: flush every line
                 with open(self.log_file, 'a') as f:
                     str_out = json.dumps(log_result)
@@ -86,10 +91,10 @@ class ImageFeaturesPipeline:
         torch.save(self.model, model_save_path)
 
 
-    def train_batch(self, x):
+    def train_batch(self, x, log_enabled):
         batch_size = len(x)
             
-        
+
         x = crop_augmentation(x, 32, 0.5)  
 
         # all images to fixed size
@@ -171,73 +176,77 @@ class ImageFeaturesPipeline:
         loss.backward()
         self.optimizer.step()
 
+        # Compute metrics for logging
+        if log_enabled:
+            with torch.no_grad():
+                # Mean, and Standard deviation across features
+                z_mag = (valid_zs0**2).mean().item()
+                z_std = valid_zs0.std(dim=0).mean().item()
 
-        # Compute useful metrics for logging
-        with torch.no_grad():
-            # Mean, and Standard deviation across features
-            z_mag = (valid_zs0**2).mean().item()
-            z_std = valid_zs0.std(dim=0).mean().item()
+                z_proj_mag = (valid_zs0_proj**2).mean().item()
+                z_proj_std = valid_zs0_proj.std(dim=0).mean().item()
+                
+                # Ratio of points that fell inside the valid frame
+                valid_ratio = valid_mask.float().mean().item()
+                valid_count = valid_mask.sum().item()
 
-            z_proj_mag = (valid_zs0_proj**2).mean().item()
-            z_proj_std = valid_zs0_proj.std(dim=0).mean().item()
-            
-            # Ratio of points that fell inside the valid frame
-            valid_ratio = valid_mask.float().mean().item()
-            valid_count = valid_mask.sum().item()
+                if valid_count > 1:
+                    # Positive match similarity
+                    pos_cos = torch.nn.functional.cosine_similarity(valid_zs0, valid_zs1, dim=-1).mean().item()
+        
+                    # Negative match similarity via random batch permutation
+                    perm_idx = torch.randperm(valid_count, device=valid_zs0.device)
+                    neg_cos = torch.nn.functional.cosine_similarity(valid_zs0, valid_zs1[perm_idx], dim=-1).mean().item()
 
-            if valid_count > 1:
-                # Positive match similarity
-                pos_cos = torch.nn.functional.cosine_similarity(valid_zs0, valid_zs1, dim=-1).mean().item()
-    
-                # Negative match similarity via random batch permutation
-                perm_idx = torch.randperm(valid_count, device=valid_zs0.device)
-                neg_cos = torch.nn.functional.cosine_similarity(valid_zs0, valid_zs1[perm_idx], dim=-1).mean().item()
+                    # Pairs eulcidean distances
+                    d_pos    = ((valid_zs0 - valid_zs1)**2).mean(dim=-1)
+                    d_neg    = ((valid_zs0 - valid_zs1[perm_idx])**2).mean(dim=-1)
 
-                # Pairs eulcidean distances
-                d_pos    = ((valid_zs0 - valid_zs1)**2).mean(dim=-1)
-                d_neg    = ((valid_zs0 - valid_zs1[perm_idx])**2).mean(dim=-1)
+                    pos_dist        = d_pos.mean().item()
+                    neg_dist        = d_neg.mean().item()
+                    pos_dist_std    = d_pos.std().item()
+                    neg_dist_std    = d_neg.std().item()  
 
-                pos_dist        = d_pos.mean().item()
-                neg_dist        = d_neg.mean().item()
-                pos_dist_std    = d_pos.std().item()
-                neg_dist_std    = d_neg.std().item()  
+                    spectrum        = self._compute_variance_spectrum(valid_zs0)
+                else:
+                    pos_cos         = 0.0
+                    neg_cos         = 0.0
 
-                spectrum        = self._compute_variance_spectrum(valid_zs0)
-            else:
-                pos_cos         = 0.0
-                neg_cos         = 0.0
+                    pos_dist        = 0.0 
+                    neg_dist        = 0.0
+                    pos_dist_std    = 0.0
+                    neg_dist_std    = 0.0
+                    spectrum        = {"exp_var_1s" : -1,  "exp_var_2s" : -1, "exp_var_3s" : -1}
 
-                pos_dist        = 0.0 
-                neg_dist        = 0.0
-                pos_dist_std    = 0.0
-                neg_dist_std    = 0.0
-                spectrum        = {"exp_var_1s" : -1,  "exp_var_2s" : -1, "exp_var_3s" : -1}
+            log_result = {
+                "loss_total": round(loss.item(), 5),
+                "loss_sim": round(loss_sim.item(), 5),
+                "loss_ssl": round(loss_ssl.item(), 5),
 
-        return {
-            "loss_total": round(loss.item(), 5),
-            "loss_sim": round(loss_sim.item(), 5),
-            "loss_ssl": round(loss_ssl.item(), 5),
+                "z_mag": round(z_mag, 5),   
+                "z_std": round(z_std, 5),
 
-            "z_mag": round(z_mag, 5),   
-            "z_std": round(z_std, 5),
+                "z_proj_mag": round(z_proj_mag, 5),   
+                "z_proj_std": round(z_proj_std, 5), 
 
-            "z_proj_mag": round(z_proj_mag, 5),   
-            "z_proj_std": round(z_proj_std, 5), 
+                "pos_cos": round(pos_cos, 5),
+                "neg_cos": round(neg_cos, 5),
 
-            "pos_cos": round(pos_cos, 5),
-            "neg_cos": round(neg_cos, 5),
+                "pos_dist": round(pos_dist, 5),
+                "neg_dist": round(neg_dist, 5),
 
-            "pos_dist": round(pos_dist, 5),
-            "neg_dist": round(neg_dist, 5),
+                "pos_dist_std": round(pos_dist_std, 5),
+                "neg_dist_std": round(neg_dist_std, 5),
 
-            "pos_dist_std": round(pos_dist_std, 5),
-            "neg_dist_std": round(neg_dist_std, 5),
+                **spectrum,
 
-            **spectrum,
+                "valid_ratio": round(valid_ratio, 3),
+                "valid_count": round(valid_count, 3)
+            }   
+        else:
+            log_result = None
 
-            "valid_ratio": round(valid_ratio, 3),
-            "valid_count": round(valid_count, 3)
-        }   
+        return log_result
 
 
     def _sample_matching_features(self, z0, z1, M, num_points):
