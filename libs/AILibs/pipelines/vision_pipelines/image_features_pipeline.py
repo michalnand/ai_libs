@@ -123,8 +123,6 @@ class ImageFeaturesPipeline:
        
         zs0, zs1, valid_mask = self._sample_matching_features(z0, z1, M.to(self.device), self.num_points)
 
-      
-
 
         # similarity loss term (Fix: Average over channels before applying mask)
         diff = ((zs0 - zs1)**2).mean(dim=-1) # Shape: (B, K)

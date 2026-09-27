@@ -11,7 +11,7 @@ from functools import partial
 # 1. Create a persistent thread pool. 
 # Adjust max_workers to match your CPU cores (or 2-4x cores for IO/CV tasks).
 # Keeping this global or at the class-level means threads stay alive waiting for work.
-SHARED_EXECUTOR = ThreadPoolExecutor(max_workers=8) 
+SHARED_EXECUTOR = ThreadPoolExecutor(max_workers=4) 
 
     
 def _crop_single(x_tmp, min_dim, prob):
