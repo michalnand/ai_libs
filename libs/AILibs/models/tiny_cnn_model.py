@@ -112,3 +112,51 @@ class TinyCNNModel(torch.nn.Module):
         y = self.conv_out(y)
 
         return y
+
+
+
+class MediumCNNModel(torch.nn.Module):
+    def __init__(self, in_ch = 3, num_features = 128, use_projector = False):
+        super().__init__()
+
+        self.conv_in = torch.nn.Conv2d(in_ch, 32, kernel_size=7, stride=2, padding=7//2)
+        self.act     = torch.nn.SiLU()
+
+        self.b0 = CNNBlock(32, 64,  64, 2)  
+        self.b1 = CNNBlock(64, 128, 128, 2)
+        self.b2 = CNNBlock(128, 256, 128, 1)
+        self.b3 = CNNBlock(128, 128, 128, 1)
+        self.b4 = CNNBlock(128, 128, 128, 1)
+        self.b5 = CNNBlock(128, 2*num_features, 2*num_features, 1)  
+
+        self.conv_out = torch.nn.Conv2d(2*num_features, num_features, kernel_size=1, stride=1, padding=0)
+
+        # Gain sqrt(2) because it feeds directly into SiLU
+        torch.nn.init.orthogonal_(self.conv_in.weight, gain=math.sqrt(2))
+        torch.nn.init.zeros_(self.conv_in.bias)
+
+        # Gain 1.0 because this is a final projection layer mapping to the metric space
+        torch.nn.init.orthogonal_(self.conv_out.weight, gain=1.0)
+        torch.nn.init.zeros_(self.conv_out.bias)    
+
+        if use_projector: 
+            self.projector = torch.nn.Linear(num_features, 2*num_features, bias=False)
+
+
+
+
+    def forward(self, x):
+
+        y = self.conv_in(x)
+        y = self.act(y)
+
+        y = self.b0(y)
+        y = self.b1(y)
+        y = self.b2(y)
+        y = self.b3(y)
+        y = self.b4(y)
+        y = self.b5(y)
+
+        y = self.conv_out(y)
+
+        return y
