@@ -124,11 +124,11 @@ class MediumCNNModel(torch.nn.Module):
 
         self.b0 = CNNBlock(32, 64,  64, 2)  
         self.b1 = CNNBlock(64, 128, 128, 2)
-        self.b2 = CNNBlock(128, 256, 128, 1)
-        self.b3 = CNNBlock(128, 128, 128, 1)
-        self.b4 = CNNBlock(128, 128, 128, 1)
-        self.b5 = CNNBlock(128, 2*num_features, 2*num_features, 1)  
-
+        self.b2 = CNNBlock(128, 256, 256, 2)
+        self.b3 = CNNBlock(256, 256, 256, 1)    
+        self.b4 = CNNBlock(256, 256, 256, 1) 
+        self.b5 = CNNBlock(256, 2*num_features, 2*num_features, 1)  
+        
         self.conv_out = torch.nn.Conv2d(2*num_features, num_features, kernel_size=1, stride=1, padding=0)
 
         # Gain sqrt(2) because it feeds directly into SiLU
