@@ -93,20 +93,21 @@ class ImageFeaturesPipeline:
 
     def train_batch(self, x, log_enabled):
         batch_size = len(x)
+
+        for i in range(len(x)):
+            print("x_uint = ", x[i].shape, x[i].dtype, x[i].min(), x[i].max())
         
         x = crop_augmentation(x, 32, 0.5)  
 
         # all images to fixed size
         x = resize_augmentation(x, self.width, self.height)
 
-        for i in range(len(x)):
-            print("x_uint = ", x[i].shape, x[i].dtype, x[i].min(), x[i].max())
-
+       
         # convert x from uint8 to float32
         x = numpy.array(x, dtype=numpy.float32)/255.0
         x = torch.from_numpy(x).to(self.device)
 
-        
+
         # simple colors augmentation, contrast, noise
         x0 = photometric_augmentations(x)
         x1 = photometric_augmentations(x)
