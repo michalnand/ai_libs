@@ -14,7 +14,7 @@ class DatasetImages:
         # Minor fix: used os.path.join for safer cross-platform path building
         for d in dirs:
             path = os.path.join(root_path, d)
-            self.images_datasets.append(ImagesLoader(path))
+            self.images_datasets.append(ImagesLoader(path, keep_uint8=True))
 
         self.dataset = DatasetCollator(self.images_datasets)
         

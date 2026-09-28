@@ -26,7 +26,6 @@ class ConfigA:
 
 
 
-
 class ConfigB:
 
     def __init__(self):
@@ -39,10 +38,10 @@ class ConfigB:
         self.batch_size = 128
 
         self.width      = 256   
-        self.height     = 256 
-        
+        self.height     = 256   
+
         self.num_points = 32
-        self.model      = AILibs.TinyCNNModel(in_ch = 3, num_features = 64, use_projector = True)
+        self.model      = AILibs.TinyCNNModel(in_ch = 3, num_features = 64, use_projector = False)
 
         self.learning_rate = 0.001
         self.w_sim         = 1.0
@@ -52,11 +51,12 @@ class ConfigB:
 
 
 
+
 if __name__ == "__main__":
     
-    config = ConfigA()
+    #config = ConfigA()
     
-    #config = ConfigB()
+    config = ConfigB()
 
     pipeline = AILibs.ImageFeaturesPipeline(config)
 
