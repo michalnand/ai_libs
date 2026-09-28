@@ -94,19 +94,17 @@ class ImageFeaturesPipeline:
     def train_batch(self, x, log_enabled):
         batch_size = len(x)
 
-        for i in range(len(x)):
-            print("x_uint = ", x[i].shape, x[i].dtype, x[i].min(), x[i].max())
+        #for i in range(len(x)):
+        #    print("x_uint = ", x[i].shape, x[i].dtype, x[i].min(), x[i].max())
         
         x = crop_augmentation(x, 32, 0.5)  
 
         # all images to fixed size
         x = resize_augmentation(x, self.width, self.height)
 
-       
         # convert x from uint8 to float32
         x = numpy.array(x, dtype=numpy.float32)/255.0
         x = torch.from_numpy(x).to(self.device)
-
 
         # simple colors augmentation, contrast, noise
         x0 = photometric_augmentations(x)
@@ -123,9 +121,8 @@ class ImageFeaturesPipeline:
         z0 = self.model(x0)
         z1 = self.model(x1)
 
-       
+        # matching points
         zs0, zs1, valid_mask = self._sample_matching_features(z0, z1, M.to(self.device), self.num_points)
-
 
         # similarity loss term (Fix: Average over channels before applying mask)
         diff = ((zs0 - zs1)**2).mean(dim=-1) # Shape: (B, K)
