@@ -99,10 +99,10 @@ class ImageFeaturesPipeline:
         # all images to fixed size
         x = resize_augmentation(x, self.width, self.height)
 
-        print("x_uint = ", x.shape, x.dtype, x.min(), x.max())
-
+        print("x_uint = ", len(x), x[0].dtype, x[0].min(), x[0].max())
+        
         # convert x from uint8 to float32
-        x = numpy.array(x/255.0, dtype=numpy.float32)
+        x = numpy.array(x, dtype=numpy.float32)/255.0
         x = torch.from_numpy(x).to(self.device)
 
         print("x_fp = ", x.shape, x.dtype, x.min(), x.max())
