@@ -31,8 +31,8 @@ def features_similarity(za, zb, result_path):
 
     # Euclidean Distance (L2 norm)
     # Note: Using standard L2 distance here. If you prefer Squared L2, remove np.sqrt()
-    euclidean_pos = np.sqrt(((za - zb)**2).sum(axis=-1))
-    euclidean_neg = np.sqrt(((za - zb_neg)**2).sum(axis=-1))
+    l2_pos = ((za - zb)**2).mean(axis=-1)
+    l2_neg = ((za - zb_neg)**2).mean(axis=-1)
 
     # ==========================================
     # 3. Plotting
@@ -56,12 +56,12 @@ def features_similarity(za, zb, result_path):
     # --- Euclidean Distance Histogram ---
     plt.figure(figsize=(10, 6)) 
     # Dynamically scale bins for distances (starts at 0)
-    max_dist = max(np.max(euclidean_pos), np.max(euclidean_neg))
+    max_dist = max(np.max(l2_pos), np.max(l2_neg))
     bins_euc = np.linspace(0, max_dist, 100)
-    plt.hist(euclidean_pos, bins=bins_euc, alpha=0.8, color='lightcoral', label='Positive (Match)', density=True)
-    plt.hist(euclidean_neg, bins=bins_euc, alpha=0.8, color='royalblue', label='Negative (Random)', density=True)
-    plt.title("Euclidean Distances Distributions of Feature Pairs")
-    plt.xlabel("Euclidean Distance (L2)")
+    plt.hist(l2_pos, bins=bins_euc, alpha=0.8, color='lightcoral', label='Positive (Match)', density=True)
+    plt.hist(l2_neg, bins=bins_euc, alpha=0.8, color='royalblue', label='Negative (Random)', density=True)
+    plt.title("Distances Distributions of Feature Pairs")
+    plt.xlabel("Distance (L2)") 
     plt.ylabel("Density")
     plt.grid(axis='y', alpha=0.3)
     plt.legend(loc='upper right')
@@ -129,16 +129,16 @@ def features_similarity(za, zb, result_path):
     # Unpack stats for the table
     c_pos_stats = stats(cos_pos)
     c_neg_stats = stats(cos_neg)
-    e_pos_stats = stats(euclidean_pos)
-    e_neg_stats = stats(euclidean_neg)
+    e_pos_stats = stats(l2_pos)
+    e_neg_stats = stats(l2_neg)
 
     # Add Cosine Table rows
     md_lines.append(f"| **Cosine** | Positive | {c_pos_stats[0]:.4f} | {c_pos_stats[1]:.4f} | {c_pos_stats[2]:.4f} | {c_pos_stats[3]:.4f} |")
     md_lines.append(f"| **Cosine** | Negative | {c_neg_stats[0]:.4f} | {c_neg_stats[1]:.4f} | {c_neg_stats[2]:.4f} | {c_neg_stats[3]:.4f} |")
-    
+        
     # Add Euclidean Table rows
-    md_lines.append(f"| **Euclidean** | Positive | {e_pos_stats[0]:.4f} | {e_pos_stats[1]:.4f} | {e_pos_stats[2]:.4f} | {e_pos_stats[3]:.4f} |")
-    md_lines.append(f"| **Euclidean** | Negative | {e_neg_stats[0]:.4f} | {e_neg_stats[1]:.4f} | {e_neg_stats[2]:.4f} | {e_neg_stats[3]:.4f} |")
+    md_lines.append(f"| **L2** | Positive | {e_pos_stats[0]:.4f} | {e_pos_stats[1]:.4f} | {e_pos_stats[2]:.4f} | {e_pos_stats[3]:.4f} |")
+    md_lines.append(f"| **L2** | Negative | {e_neg_stats[0]:.4f} | {e_neg_stats[1]:.4f} | {e_neg_stats[2]:.4f} | {e_neg_stats[3]:.4f} |")
 
     # Combine into final string
     markdown_report = "\n".join(md_lines)

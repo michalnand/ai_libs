@@ -16,7 +16,7 @@ class ConfigA:
         self.height     = 256   
 
         self.num_points = 32
-        self.model      = AILibs.TinyCNNModel(in_ch = 3, num_features = 128, use_projector = False)
+        self.model      = AILibs.TinyCNNModel(in_ch = 3, num_features = 64, use_projector = False)
 
         self.learning_rate = 0.001
         self.w_sim         = 1.0
@@ -43,7 +43,7 @@ class ConfigB:
         self.num_points = 32
         self.model      = AILibs.MediumCNNModel(in_ch = 3, num_features = 128, use_projector = False)
 
-        self.learning_rate = 0.001
+        self.learning_rate = 0.001  
         self.w_sim         = 1.0
         self.w_ssl         = 10.0        
         
@@ -54,9 +54,9 @@ class ConfigB:
 
 if __name__ == "__main__":
     
-    config = ConfigA()
+    #config = ConfigA()
     
-    #config = ConfigB()
+    config = ConfigB()
 
     pipeline = AILibs.ImageFeaturesPipeline(config)
 
